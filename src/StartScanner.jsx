@@ -1,45 +1,50 @@
-import React, { useState } from 'react'
-import { Button, SafeAreaView, StyleSheet } from 'react-native'
-import {Scanner} from './Scanner.jsx'
+import React, {useState} from 'react';
+import {Button, SafeAreaView, StyleSheet, View} from 'react-native';
+import {Scanner} from './Scanner.jsx';
+import {OCR} from './OCR.jsx';
 
 export const StartScanner = () => {
-  const [newScanner, setNewScanner] = useState(false)
+  const [newScanner, setNewScanner] = useState(false);
+  const [startOCR, setStartOCR] = useState(false);
 
-
-  console.log('start scanner');
   if (newScanner) {
     console.log('start new scanner');
     return <Scanner />;
   }
 
+  if (startOCR) {
+    console.log('start OCR');
+    return <OCR uri={null} />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Button
-        onPress={() => {
-          setNewScanner(true);
-        }}
-        title="Start scan"
-      />
-      {/* <Button
-        onPress={() => {
-          setOldScanner(true);
-        }}
-        title="Start scan (old)"
-      /> */}
+      <View style={styles.button}>
+        <Button
+          onPress={() => {
+            setNewScanner(true);
+          }}
+          title="Start scan"
+        />
+      </View>
+      <View style={styles.button}>
+        <Button
+          onPress={() => {
+            setStartOCR(true);
+          }}
+          title="Start OCR"
+        />
+      </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
   },
-  scroll: {
-    flex: 1,
-    width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 2,
+  button: {
+    paddingBottom: 20,
   },
 });
