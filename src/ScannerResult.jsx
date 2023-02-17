@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 import {Image, SafeAreaView, Button, StyleSheet, View} from 'react-native';
-import {OCR} from './OCR.jsx';
+import {OCR} from './OCR/OCR.jsx';
 
 export const ScannerResult = ({scannedImage}) => {
   const [startOCR, setStartOCR] = useState(false);
@@ -15,7 +15,7 @@ export const ScannerResult = ({scannedImage}) => {
       <View style={styles.imageContainer}>
         <Image
           style={styles.image}
-          resizeMode="stretch"
+          resizeMode="contain"
           source={{uri: scannedImage}}
         />
       </View>

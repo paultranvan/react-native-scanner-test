@@ -1,14 +1,13 @@
 import React, {useState} from 'react';
 import {Button, SafeAreaView, StyleSheet, View} from 'react-native';
 import {Scanner} from './Scanner.jsx';
-import {OCR} from './OCR.jsx';
+import {OCR} from './OCR/OCR.jsx';
 
 export const StartScanner = () => {
   const [newScanner, setNewScanner] = useState(false);
   const [startOCR, setStartOCR] = useState(false);
 
   if (newScanner) {
-    console.log('start new scanner');
     return <Scanner />;
   }
 
