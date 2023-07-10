@@ -2,6 +2,9 @@ import React, {useRef, useEffect, useState} from 'react';
 import {Dimensions} from 'react-native';
 import RNFS from 'react-native-fs';
 import Canvas, {Image as CanvasImage} from 'react-native-canvas';
+import {findAttributes} from './findAttributes';
+import {normalizeImageSize} from './ImageResizer';
+import MlkitOcr from 'react-native-mlkit-ocr';
 
 const mimeMap = {
   jpeg: 'image/jpeg',
@@ -31,6 +34,30 @@ export const ImageOCR = ({
   }, [imgURI]);
 
   useEffect(() => {
+    const runOCR = async () => {
+      try {
+        if (imgURI && originalWidth && originalHeight) {
+          console.log('normalize img and OCR with imgURI : ', imgURI);
+          //const normalizedImage = await normalizeImageSize(imgURI, 450, 285);
+          let startTime = performance.now();
+          const result = await MlkitOcr.detectFromUri(imgURI);
+          let endTime = performance.now();
+          console.log(`OCR took ${endTime - startTime} ms.`);
+          console.log('find matchign attributes');
+
+          startTime = performance.now();
+          findAttributes(result, 'passport', originalWidth, originalHeight);
+          endTime = performance.now();
+          console.log(`Fiond attributes took ${endTime - startTime} ms.`);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    runOCR();
+  }, [imgURI, originalWidth, originalHeight]);
+
+  useEffect(() => {
     if (ref.current && imgURI && imgBase64 && OCRResult) {
       const canvas = ref.current;
 
@@ -46,7 +73,11 @@ export const ImageOCR = ({
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
         for (const block of OCRResult) {
-          console.log('block : ', block);
+          //console.log('block : ', block);
+          for (const line of block.lines) {
+            //console.log('line : ', line);
+            //console.log('elements for the line : ', line.elements);
+          }
           const x = (block.bounding.left * canvas.width) / originalWidth - 2;
           const y = (block.bounding.top * canvas.height) / originalHeight - 2;
           const width =
