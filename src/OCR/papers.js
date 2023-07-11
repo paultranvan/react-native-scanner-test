@@ -71,7 +71,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'bottomTest',
-          mandatory: true,
+          mandatory: false,
           fullLine: true,
           fixedSize: true,
           bounding: {
@@ -132,12 +132,12 @@ export const papersDefinition = {
       },
       referenceBox: {
         bounding: {
-          height: 45,
-          left: 52,
-          top: 16,
-          width: 1260,
+          height: 39,
+          left: 41,
+          top: 103,
+          width: 456,
         },
-        text: 'RÉPUBLIQUEFRANCAISE',
+        text: 'CARTENATIONALE',
       },
       attributesBoxes: [
         {

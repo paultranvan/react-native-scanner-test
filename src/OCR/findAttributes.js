@@ -7,7 +7,11 @@ const SAME_LINE_MAX_Y_DIFF = 5;
 
 const normalizeReferenceText = text => {
   // TODO: strip weird character & co ?
-  return text.toUpperCase().replace(/\s/g, '').replace(/ç/g, 'c');
+  return text
+    .toUpperCase()
+    .replace(/\s/g, '')
+    .replace(/ç/g, 'c')
+    .replace(/'/g, '');
 };
 
 const computeDistance = (box1, box2, yWeight = 1) => {
@@ -15,6 +19,29 @@ const computeDistance = (box1, box2, yWeight = 1) => {
   let xDist = Math.pow(box1.left - box2.left, 2);
   let yDist = Math.pow(box1.top - box2.top, 2) * yWeight;
   return Math.sqrt(xDist + yDist);
+};
+
+const computeDistanceWithRefDist = (box1, box2, distX, distY) => {
+  const kX = (box2.left + distX) / box1.left;
+  const kY = (box2.top + distY) / box1.top;
+
+  // const kX = 1;
+  // const kY = 2.23;
+  let xDist = Math.pow(box1.left * kX - distX - box2.left, 2);
+  let yDist = Math.pow(box1.top * kY - distY - box2.top, 2);
+
+  console.log({xDist, yDist});
+  return Math.sqrt(xDist + yDist);
+};
+
+const computeDistance2 = (box1, box2, distX, distY, ratio) => {
+  const xNorm = (box1.left - distX) * ratio;
+  const yNorm = (box1.top - distY) * ratio;
+
+  console.log({xNorm, yNorm});
+
+  let xDist = Math.pow(xNorm - box2.left, 2);
+  let yDist = Math.pow(yNorm - box2.top, 2);
 };
 
 const getImageRatio = (refBounds, templateBounds) => {
@@ -188,6 +215,8 @@ const findAttributesBox = (
   let leftShift = 0;
   let topShift = 0;
   let refDist = 0;
+  let refDistX = 0;
+  let refDistY = 0;
   if (refBounds) {
     const scaleRefBounds = normalizeBounds(
       refBounds,
@@ -201,14 +230,19 @@ const findAttributesBox = (
       refBounds.left * xScalingFactor - paper.referenceBox.bounding.left;
     topShift = refBounds.top * yScalingFactor - paper.referenceBox.bounding.top;
 
+    leftShift =
+      refBounds.left - paper.referenceBox.bounding.left / xScalingFactor;
+    topShift = refBounds.top - paper.referenceBox.bounding.top / yScalingFactor;
+
     console.log('unscale ref bounds : ', refBounds);
     console.log('scaleRefBounds : ', scaleRefBounds);
     console.log('left shift : ', leftShift);
     console.log('top shift : ', topShift);
 
-    refDist = computeDistance(scaleRefBounds, paper.referenceBox.bounding);
-
-    console.log('ref dist : ', refDist);
+    refDistX = Math.abs(scaleRefBounds.left - paper.referenceBox.bounding.left);
+    refDistY = Math.abs(scaleRefBounds.top - paper.referenceBox.bounding.top);
+    console.log('ref dist X: ', refDistX);
+    console.log('ref dist Y: ', refDistY);
   }
 
   // leftShift = 0;
@@ -241,12 +275,28 @@ const findAttributesBox = (
             topShift,
             leftShift,
           );
-          const distance = computeDistance(bounds, attr.bounding);
-          //console.log('dist : ', distance);
-          //console.log('el : ', el);
+          //const distance = computeDistance(bounds, attr.bounding);
+          // const distance = computeDistanceWithRefDist(
+          //   bounds,
+          //   attr.bounding,
+          //   refDistX,
+          //   refDistY,
+          // );
+
+          const distance = computeDistance2(
+            el.bounding,
+            attr.bounding,
+            leftShift,
+            topShift,
+            xScalingFactor,
+          );
+
+          console.log('dist : ', distance);
+          console.log('el : ', el);
+          //console.log('el text : ', el.text);
+          console.log('normalized bounds : ', bounds);
           if (distance < minDistance) {
             console.log('found min dist');
-            console.log('normalized bounds : ', bounds);
             matchingEl = {...el};
 
             minDistance = distance;
@@ -256,9 +306,6 @@ const findAttributesBox = (
               // Some attributes might be unecessarely splitted, e.g. a name in 2 parts
               const nextEl = line.elements[cptLineElements + 1];
               matchingEl.text += nextEl.text;
-              console.log('el text : ', el.text);
-              console.log('next el text : ', nextEl.text);
-              console.log('MERGE TEXT : ', matchingEl.text);
             }
           }
           cptLineElements++;
@@ -266,6 +313,8 @@ const findAttributesBox = (
       }
     }
     if (matchingEl) {
+      console.log('value matched : ', matchingEl.text);
+      console.log('dist matched : ', minDistance);
       foundAttributes.push({
         name: attr.name,
         value: matchingEl.text,
@@ -318,6 +367,8 @@ const findReferenceTextBound = (
   if (!paper.referenceBox) {
     return null;
   }
+
+  const minLength = 4;
   const referenceText = paper.referenceBox.text;
   console.log('ref text : ', referenceText);
 
@@ -325,65 +376,81 @@ const findReferenceTextBound = (
   let splittedBlocksBouding;
 
   for (const block of blocks) {
-    if (normalizeReferenceText(block.text) === referenceText) {
-      console.log('-- Found reference matching box: exact');
-      return block.bounding;
-    }
-    if (normalizeReferenceText(block.text).includes(referenceText)) {
-      console.log('text block includes ref text');
-      // find the reference text splitted into elements
-      let splittedText = '';
-      let bounding = {
-        left: 0,
-        height: 0,
-        width: 0,
-        top: 0,
-      };
-
-      // deal with one line for now
-      const line = block.lines[0];
-
-      let firstLineEl = true;
+    for (const line of block.lines) {
       for (const el of line.elements) {
-        if (referenceText.includes(normalizeReferenceText(el.text))) {
-          if (firstLineEl) {
-            splittedText += el.text;
-            bounding = el.bounding;
-            firstLineEl = false;
+        const normalizeRefText = normalizeReferenceText(el.text);
+
+        if (normalizeRefText === referenceText) {
+          console.log('-- Found reference matching box: exact');
+          return el.bounding;
+        }
+        console.log('ref text  : ', normalizeRefText);
+        // if (
+        //   normalizeRefText.length > minLength &&
+        //   normalizeRefText.includes(referenceText)
+        // ) {
+        //   console.log('text el includes ref text');
+        //   // find the reference text splitted into elements
+        //   let splittedText = '';
+        //   let bounding = {
+        //     left: 0,
+        //     height: 0,
+        //     width: 0,
+        //     top: 0,
+        //   };
+
+        //   // deal with one line for now
+        //   const line = block.lines[0];
+
+        //   let firstLineEl = true;
+        //   for (const el of line.elements) {
+        //     if (referenceText.includes(normalizeReferenceText(el.text))) {
+        //       if (firstLineEl) {
+        //         splittedText += el.text;
+        //         bounding = el.bounding;
+        //         firstLineEl = false;
+        //       } else {
+        //         splittedText += el.text;
+        //         // Manually compute the width from between the latest element
+        //         // and the most left.
+        //         bounding.width =
+        //           el.bounding.left + el.bounding.width - bounding.left;
+        //       }
+        //     }
+        //   }
+        //   console.log('splitted text : ', splittedText);
+        //   if (normalizeReferenceText(splittedText) === referenceText) {
+        //     console.log('-- Found reference matching box: splitted elements');
+        //     console.log('-- bounding : ', bounding);
+        //     console.log(
+        //       'dist : ',
+        //       computeDistance(
+        //         normalizeBounds(bounding, xScalingFactor, yScalingFactor),
+        //         paper.referenceBox.bounding,
+        //       ),
+        //     );
+        //     return bounding;
+        //   }
+        // }
+
+        if (
+          normalizeRefText.length > minLength &&
+          referenceText.includes(normalizeRefText)
+        ) {
+          splittedBlocksText += normalizeRefText;
+
+          console.log('-- Found a possible splitted block');
+          if (!splittedBlocksBouding) {
+            splittedBlocksBouding = el.bounding;
           } else {
-            splittedText += el.text;
-            // Manually compute the width from between the latest element
-            // and the most left.
-            bounding.width =
-              el.bounding.left + el.bounding.width - bounding.left;
+            splittedBlocksBouding.width =
+              el.bounding.left + el.bounding.width - splittedBlocksBouding.left;
+          }
+          console.log('splitted text : ', splittedBlocksText);
+          if (splittedBlocksText === referenceText) {
+            return splittedBlocksBouding;
           }
         }
-      }
-      console.log('splitted text : ', splittedText);
-      if (normalizeReferenceText(splittedText) === referenceText) {
-        console.log('-- Found reference matching box: splitted elements');
-        console.log('-- bounding : ', bounding);
-        console.log(
-          'dist : ',
-          computeDistance(
-            normalizeBounds(bounding, xScalingFactor, yScalingFactor),
-            paper.referenceBox.bounding,
-          ),
-        );
-        return bounding;
-      }
-    }
-
-    if (referenceText.includes(normalizeReferenceText(block.text))) {
-      splittedBlocksText += normalizeReferenceText(block.text);
-      console.log('-- Found a possible splitted block.');
-      if (!splittedBlocksBouding) {
-        splittedBlocksBouding = block.bounding;
-      } else {
-        splittedBlocksBouding.width =
-          block.bounding.left +
-          block.bounding.width -
-          splittedBlocksBouding.left;
       }
     }
   }
@@ -420,6 +487,7 @@ export const findAttributes = (OCRResult, paperType, width, height) => {
 
     if (!refBounding) {
       console.log('!!!!!!!!!!!!!!!No reference zone found');
+      return;
     }
     logOCRElements(OCRResult);
 
