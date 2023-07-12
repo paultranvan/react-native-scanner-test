@@ -18,7 +18,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'lastName',
-          mandatory: true,
+          mandatory: false,
           fullLine: true,
           bounding: {
             height: 57,
@@ -35,7 +35,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'firstName',
-          mandatory: true,
+          mandatory: false,
           bounding: {
             height: 47,
             left: 428,
@@ -46,7 +46,7 @@ export const papersDefinition = {
         {
           type: 'date',
           name: 'issueDate',
-          mandatory: true,
+          mandatory: false,
           bounding: {
             height: 44,
             left: 426,
@@ -162,6 +162,50 @@ export const papersDefinition = {
             top: 158,
           },
           textRules: [{regexp: /[=]/g, replace: ' '}],
+        },
+      ],
+    },
+    back: {},
+  },
+  passport: {
+    front: {
+      size: {
+        width: 1529,
+        height: 1077,
+      },
+      referenceBox: {
+        bounding: {
+          height: 32,
+          left: 33,
+          top: 69,
+          width: 257,
+        },
+        text: 'PASSEPORT',
+      },
+      attributesBoxes: [
+        {
+          type: 'string',
+          name: 'passportNumber',
+          mandatory: true,
+          fixedSize: true,
+          bounding: {
+            height: 28,
+            left: 1071,
+            top: 118,
+            width: 163,
+          },
+        },
+        {
+          type: 'string',
+          name: 'expirationDate',
+          mandatory: true,
+          fixedSize: true,
+          fullLine: true,
+          bounding: {
+            height: 25,
+            left: 466,
+            top: 736,
+          },
         },
       ],
     },
