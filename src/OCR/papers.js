@@ -1,16 +1,16 @@
 export const papersDefinition = {
-  passport: {
+  driver: {
     front: {
       size: {
-        width: 415,
-        height: 254,
+        width: 1420,
+        height: 897,
       },
       referenceBox: {
         bounding: {
-          height: 16,
-          left: 104,
-          top: 4,
-          width: 153,
+          height: 46,
+          left: 334,
+          top: 28,
+          width: 526,
         },
         text: 'PERMISDECONDUIRE',
       },
@@ -21,9 +21,9 @@ export const papersDefinition = {
           mandatory: true,
           fullLine: true,
           bounding: {
-            height: 18,
-            left: 130,
-            top: 26,
+            height: 57,
+            left: 379,
+            top: 115,
           },
           textRules: [
             {regexp: /^1./},
@@ -37,9 +37,9 @@ export const papersDefinition = {
           name: 'firstName',
           mandatory: true,
           bounding: {
-            height: 13,
-            left: 142,
-            top: 52,
+            height: 47,
+            left: 428,
+            top: 201,
           },
           textRules: [{regexp: /^[\^4n]/}],
         },
@@ -48,10 +48,10 @@ export const papersDefinition = {
           name: 'issueDate',
           mandatory: true,
           bounding: {
-            height: 13,
-            left: 129,
-            top: 96,
-            width: 57,
+            height: 44,
+            left: 426,
+            top: 362,
+            width: 198,
           },
           textRules: [{regexp: /\^4a/}, {regexp: /\^./}],
         },
@@ -61,10 +61,10 @@ export const papersDefinition = {
           mandatory: true,
           fixedSize: true,
           bounding: {
-            height: 16,
-            left: 129,
-            top: 115,
-            width: 57,
+            height: 48,
+            left: 419,
+            top: 429,
+            width: 204,
           },
           textRules: [{regexp: /^4b/}, {regexp: /^\./}],
         },
@@ -75,10 +75,10 @@ export const papersDefinition = {
           fullLine: true,
           fixedSize: true,
           bounding: {
-            height: 22,
-            left: 10,
-            top: 215,
-            width: 268,
+            height: 94,
+            left: 129,
+            top: 1341,
+            width: 2404,
           },
         },
       ],
@@ -135,7 +135,7 @@ export const papersDefinition = {
           height: 39,
           left: 41,
           top: 103,
-          width: 456,
+          width: 284,
         },
         text: 'CARTENATIONALE',
       },

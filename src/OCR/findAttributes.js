@@ -42,6 +42,33 @@ const computeDistance2 = (box1, box2, distX, distY, ratio) => {
 
   let xDist = Math.pow(xNorm - box2.left, 2);
   let yDist = Math.pow(yNorm - box2.top, 2);
+
+  return Math.sqrt(xDist + yDist);
+};
+
+const computeDistance3 = (box1, box2, distX, distY, ratioX, ratioY) => {
+  let xNorm = box1.left - distX;
+  if (ratioX > 1) {
+    xNorm / ratioX;
+  } else {
+    xNorm * ratioX;
+  }
+  let yNorm = box1.top - distY;
+  if (ratioY > 1) {
+    yNorm / ratioY;
+  } else {
+    yNorm * ratioY;
+  }
+  //const yNorm = (box1.top - distY) / ratioY;
+
+  console.log({xNorm, yNorm});
+
+  let xDist = Math.pow(xNorm - box2.left, 2);
+  let yDist = Math.pow(yNorm - box2.top, 2);
+
+  console.log({xDist, yDist});
+
+  return Math.sqrt(xDist + yDist);
 };
 
 const getImageRatio = (refBounds, templateBounds) => {
@@ -217,6 +244,8 @@ const findAttributesBox = (
   let refDist = 0;
   let refDistX = 0;
   let refDistY = 0;
+  let widthRatio = 0;
+  let heightRatio = 0;
   if (refBounds) {
     const scaleRefBounds = normalizeBounds(
       refBounds,
@@ -234,10 +263,16 @@ const findAttributesBox = (
       refBounds.left - paper.referenceBox.bounding.left / xScalingFactor;
     topShift = refBounds.top - paper.referenceBox.bounding.top / yScalingFactor;
 
+    widthRatio = refBounds.width / paper.referenceBox.bounding.width;
+    heightRatio = refBounds.height / paper.referenceBox.bounding.height;
+    leftShift = refBounds.left - paper.referenceBox.bounding.left * widthRatio;
+    topShift = refBounds.top - paper.referenceBox.bounding.top * heightRatio;
+
     console.log('unscale ref bounds : ', refBounds);
     console.log('scaleRefBounds : ', scaleRefBounds);
     console.log('left shift : ', leftShift);
     console.log('top shift : ', topShift);
+    console.log({widthRatio, heightRatio});
 
     refDistX = Math.abs(scaleRefBounds.left - paper.referenceBox.bounding.left);
     refDistY = Math.abs(scaleRefBounds.top - paper.referenceBox.bounding.top);
@@ -283,12 +318,13 @@ const findAttributesBox = (
           //   refDistY,
           // );
 
-          const distance = computeDistance2(
+          const distance = computeDistance3(
             el.bounding,
             attr.bounding,
             leftShift,
             topShift,
-            xScalingFactor,
+            widthRatio,
+            heightRatio,
           );
 
           console.log('dist : ', distance);
@@ -368,7 +404,7 @@ const findReferenceTextBound = (
     return null;
   }
 
-  const minLength = 4;
+  const minLength = 1; // évite de prendre des caractères poubelles, comme le "I" pour CI. Mais trop haut et on loupe le "DE" du passeport...
   const referenceText = paper.referenceBox.text;
   console.log('ref text : ', referenceText);
 
@@ -384,7 +420,7 @@ const findReferenceTextBound = (
           console.log('-- Found reference matching box: exact');
           return el.bounding;
         }
-        console.log('ref text  : ', normalizeRefText);
+        console.log('el text  : ', normalizeRefText);
         // if (
         //   normalizeRefText.length > minLength &&
         //   normalizeRefText.includes(referenceText)
@@ -476,6 +512,7 @@ export const findAttributes = (OCRResult, paperType, width, height) => {
   console.log('OCR result : ', OCRResult);
 
   const paper = papersDefinition[paperType].front;
+  console.log({paper});
 
   if (OCRResult?.length > 0) {
     const refBounding = findReferenceTextBound(
@@ -489,7 +526,7 @@ export const findAttributes = (OCRResult, paperType, width, height) => {
       console.log('!!!!!!!!!!!!!!!No reference zone found');
       return;
     }
-    logOCRElements(OCRResult);
+    //logOCRElements(OCRResult);
 
     const xScalingFactor = paper.size.width / width;
     const yScalingFactor = paper.size.height / height;
