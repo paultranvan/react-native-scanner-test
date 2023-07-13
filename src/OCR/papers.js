@@ -5,6 +5,12 @@ export const papersDefinition = {
         width: 1420,
         height: 897,
       },
+      textShift: {
+        left: 18,
+        top: 26,
+        right: 36,
+        bottom: 66,
+      },
       referenceBox: {
         bounding: {
           height: 46,
@@ -18,7 +24,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'lastName',
-          mandatory: false,
+          mandatory: true,
           fullLine: true,
           bounding: {
             height: 57,
@@ -35,7 +41,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'firstName',
-          mandatory: false,
+          mandatory: true,
           bounding: {
             height: 47,
             left: 428,
@@ -46,7 +52,7 @@ export const papersDefinition = {
         {
           type: 'date',
           name: 'issueDate',
-          mandatory: false,
+          mandatory: true,
           bounding: {
             height: 44,
             left: 426,
@@ -77,7 +83,7 @@ export const papersDefinition = {
           bounding: {
             height: 94,
             left: 129,
-            top: 1341,
+            top: 767,
             width: 2404,
           },
         },
@@ -129,6 +135,12 @@ export const papersDefinition = {
       size: {
         width: 1333,
         height: 909,
+      },
+      textShift: {
+        left: 48,
+        top: 20,
+        right: 33,
+        bottom: 71,
       },
       referenceBox: {
         bounding: {

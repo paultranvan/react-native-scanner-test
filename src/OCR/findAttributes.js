@@ -49,15 +49,17 @@ const computeDistance2 = (box1, box2, distX, distY, ratio) => {
 const computeDistance3 = (box1, box2, distX, distY, ratioX, ratioY) => {
   let xNorm = box1.left - distX;
   if (ratioX > 1) {
-    xNorm / ratioX;
+    //xNorm / ratioX;
+    xNorm = xNorm / ratioX;
   } else {
-    xNorm * ratioX;
+    xNorm = xNorm * ratioX;
   }
   let yNorm = box1.top - distY;
   if (ratioY > 1) {
-    yNorm / ratioY;
+    //yNorm / ratioY;
+    yNorm = yNorm / ratioY;
   } else {
-    yNorm * ratioY;
+    yNorm = yNorm * ratioY;
   }
   //const yNorm = (box1.top - distY) / ratioY;
 
@@ -67,6 +69,28 @@ const computeDistance3 = (box1, box2, distX, distY, ratioX, ratioY) => {
   let yDist = Math.pow(yNorm - box2.top, 2);
 
   console.log({xDist, yDist});
+
+  return Math.sqrt(xDist + yDist);
+};
+
+const computeDistanceByBoxRatio = (
+  box1,
+  imgWidth,
+  imgHeight,
+  attrImgRatioX,
+  attrImgRatioY,
+  leftShift,
+  topShift,
+) => {
+  // left and top shift are probably only necessary for non centered elements (if the attrImgRatio does not include the text shift )
+  const boxImgRatioX = (box1.left - leftShift) / imgWidth;
+  const boxImgRatioY = (box1.top - topShift) / imgHeight;
+
+  console.log({boxImgRatioX, boxImgRatioY});
+  console.log({attrImgRatioX, attrImgRatioY});
+
+  const xDist = Math.pow(boxImgRatioX - attrImgRatioX, 2);
+  const yDist = Math.pow(boxImgRatioY - attrImgRatioY, 2);
 
   return Math.sqrt(xDist + yDist);
 };
@@ -229,12 +253,37 @@ const postProcessing = attributes => {
   return processed;
 };
 
+const findTextBounds = OCRResult => {
+  console.log(OCRResult);
+  let {left, top} = OCRResult[0].bounding; // init
+  let bottom = top;
+  let right = left;
+  for (const block of OCRResult) {
+    if (block.bounding.top < top) {
+      top = block.bounding.top;
+    }
+    if (block.bounding.left < left) {
+      left = block.bounding.left;
+    }
+    if (block.bounding.top + block.bounding.height > bottom) {
+      bottom = block.bounding.top;
+    }
+    if (block.bounding.left + block.bounding.width > right) {
+      right = block.bounding.left + block.bounding.width;
+    }
+  }
+  console.log({left, top, bottom, right});
+  return {left, top, right, bottom};
+};
+
 const findAttributesBox = (
   OCRResult,
   paper,
   refBounds,
   xScalingFactor,
   yScalingFactor,
+  imgWidth,
+  imgHeight,
 ) => {
   const attributesToFind = paper.attributesBoxes.filter(att => att.mandatory);
 
@@ -283,6 +332,14 @@ const findAttributesBox = (
   // leftShift = 0;
   // topShift = 0;
 
+  const {top, bottom, left, right} = findTextBounds(OCRResult);
+  const textWidth = right - left;
+  const textHeight = bottom - top;
+  console.log({textHeight, textWidth});
+  leftShift = left;
+  topShift = top;
+  console.log({leftShift, topShift});
+
   const foundAttributes = [];
 
   // const elements = [];
@@ -297,6 +354,16 @@ const findAttributesBox = (
 
   for (const attr of attributesToFind) {
     console.log('------attr : ', attr);
+    //const attrImgRatioX = attr.bounding.left / paper.size.width;
+    //const attrImgRatioY = attr.bounding.top / paper.size.height;
+    // try for not centered papers. Otherwise see above.
+    const attrImgRatioX =
+      attr.bounding.left /
+      (paper.size.width - paper.textShift.left - paper.textShift.right);
+    const attrImgRatioY =
+      attr.bounding.top /
+      (paper.size.height - paper.textShift.top - paper.textShift.bottom);
+
     let minDistance = 100000;
     let matchingEl;
     for (const block of OCRResult) {
@@ -318,19 +385,41 @@ const findAttributesBox = (
           //   refDistY,
           // );
 
-          const distance = computeDistance3(
+          /*const distance = computeDistance3(
             el.bounding,
             attr.bounding,
             leftShift,
             topShift,
             widthRatio,
             heightRatio,
-          );
+          );*/
+
+          const notCentered = true; // TODO : détecter quand non centré ? nécessaire ? tester...
+          let distance;
+          if (notCentered) {
+            distance = computeDistanceByBoxRatio(
+              el.bounding,
+              textWidth,
+              textHeight,
+              attrImgRatioX,
+              attrImgRatioY,
+              leftShift,
+              topShift,
+            );
+          } else {
+            distance = computeDistanceByBoxRatio(
+              el.bounding,
+              imgWidth,
+              imgHeight,
+              attrImgRatioX,
+              attrImgRatioY,
+            );
+          }
 
           console.log('dist : ', distance);
           console.log('el : ', el);
           //console.log('el text : ', el.text);
-          console.log('normalized bounds : ', bounds);
+          // console.log('normalized bounds : ', bounds);
           if (distance < minDistance) {
             console.log('found min dist');
             matchingEl = {...el};
@@ -510,6 +599,7 @@ const logOCRElements = OCRResult => {
 export const findAttributes = (OCRResult, paperType, width, height) => {
   // TODO should detect with levheinstein distance? Beware of false positive...
   console.log('OCR result : ', OCRResult);
+  console.log({width, height});
 
   const paper = papersDefinition[paperType].front;
   console.log({paper});
@@ -539,6 +629,8 @@ export const findAttributes = (OCRResult, paperType, width, height) => {
       refBounding,
       xScalingFactor,
       yScalingFactor,
+      width,
+      height,
     );
 
     console.log({refBounding});
