@@ -590,21 +590,24 @@ const findAttributeInElements = (OCRResult, attribute) => {
 };
 
 const findAttributesByRegex = (OCRResult, paper) => {
-  const attributesToFind = paper.atttributesregex.filter(
-    att => !(att.mandatory === false),
-  );
+  const attributesToFind = paper.atttributesRegex
+    ? paper.atttributesRegex.filter(att => !(att.mandatory === false))
+    : [];
   const foundAttributes = [];
   for (const attr of attributesToFind) {
+    // First, try to find by the coarse-grain blocks
     const resultByBlock = findAttributeInBlocks(OCRResult, attr);
     if (resultByBlock) {
       foundAttributes.push(resultByBlock);
       continue;
     }
+    // If it failed, try to find by lines
     const resultByLines = findAttributeInLines(OCRResult, attr);
     if (resultByLines) {
       foundAttributes.push(resultByLines);
       continue;
     }
+    // Finally, try by elements
     const resultByElements = findAttributeInElements(OCRResult, attr);
     if (resultByElements) {
       foundAttributes.push(resultByElements);
