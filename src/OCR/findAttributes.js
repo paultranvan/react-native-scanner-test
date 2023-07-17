@@ -238,7 +238,7 @@ const postProcessing = attributes => {
   console.log('group : ', groups);
   const mergedGroups = [];
   for (const group of Object.values(groups)) {
-    const sortedGroup = group.sort((a, b) => b.group.order - a.group.order);
+    const sortedGroup = group.sort((a, b) => a.group.order - b.group.order);
     console.log({sortedGroup});
     const groupedText = sortedGroup.reduce((acc, attr) => {
       acc += attr.value;
