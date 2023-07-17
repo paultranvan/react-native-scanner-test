@@ -78,6 +78,23 @@ const computeDistance3 = (box1, box2, distX, distY, ratioX, ratioY) => {
   return Math.sqrt(xDist + yDist);
 };
 
+const computeDistanceByBoxRatioNotCentered = (
+  box1,
+  imgWidth,
+  imgHeight,
+  attrImgRatioX,
+  attrImgRatioY,
+) => {
+  // left and top shift are probably only necessary for non centered elements (if the attrImgRatio does not include the text shift )
+  const boxImgRatioX = box1.left / imgWidth;
+  const boxImgRatioY = box1.top / imgHeight;
+
+  const xDist = Math.pow(boxImgRatioX - attrImgRatioX, 2);
+  const yDist = Math.pow(boxImgRatioY - attrImgRatioY, 2);
+
+  return Math.sqrt(xDist + yDist);
+};
+
 const computeDistanceByBoxRatio = (
   box1,
   imgWidth,
@@ -298,9 +315,9 @@ const findAttributesByBox = (
   imgWidth,
   imgHeight,
 ) => {
-  const attributesToFind = paper.attributesBoxes.filter(
-    att => !(att.mandatory === false),
-  );
+  const attributesToFind = paper.attributesBoxes
+    ? paper.attributesBoxes.filter(att => !(att.mandatory === false))
+    : [];
 
   // could be used for cases where the paper is not well centered
   let leftShift = 0;
@@ -369,15 +386,19 @@ const findAttributesByBox = (
 
   for (const attr of attributesToFind) {
     console.log('------attr : ', attr);
-    //const attrImgRatioX = attr.bounding.left / paper.size.width;
-    //const attrImgRatioY = attr.bounding.top / paper.size.height;
-    // try for not centered papers. Otherwise see above.
-    const attrImgRatioX =
-      attr.bounding.left /
-      (paper.size.width - paper.textShift.left - paper.textShift.right);
-    const attrImgRatioY =
-      attr.bounding.top /
-      (paper.size.height - paper.textShift.top - paper.textShift.bottom);
+    const notCentered = false; // TODO : détecter quand non centré ? nécessaire ? tester...
+    let attrImgRatioX, attrImgRatioY;
+    if (notCentered) {
+      attrImgRatioX =
+        attr.bounding.left /
+        (paper.size.width - paper.textShift.left - paper.textShift.right);
+      attrImgRatioY =
+        attr.bounding.top /
+        (paper.size.height - paper.textShift.top - paper.textShift.bottom);
+    } else {
+      attrImgRatioX = attr.bounding.left / paper.size.width;
+      attrImgRatioY = attr.bounding.top / paper.size.height;
+    }
 
     let minDistance = 100000;
     let matchingEl;
@@ -409,7 +430,6 @@ const findAttributesByBox = (
             heightRatio,
           );*/
 
-          const notCentered = true; // TODO : détecter quand non centré ? nécessaire ? tester...
           let distance;
           if (notCentered) {
             distance = computeDistanceByBoxRatio(
@@ -422,7 +442,7 @@ const findAttributesByBox = (
               topShift,
             );
           } else {
-            distance = computeDistanceByBoxRatio(
+            distance = computeDistanceByBoxRatioNotCentered(
               el.bounding,
               imgWidth,
               imgHeight,
