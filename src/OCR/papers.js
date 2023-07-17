@@ -177,7 +177,31 @@ export const papersDefinition = {
         },
       ],
     },
-    back: {},
+    back: {
+      size: {
+        width: 596,
+        height: 410,
+      },
+      textShift: {
+        bottom: 218,
+        left: 12,
+        right: 429,
+        top: 126,
+      },
+      attributesBoxes: [
+        {
+          type: 'date',
+          dateFormat: 'DDMMYYYY',
+          name: 'expirationDate',
+          bounding: {
+            left: 175,
+            top: 176,
+          },
+          fullLine: true,
+          textRules: [{regex: /[.]/g}],
+        },
+      ],
+    },
   },
   passport: {
     front: {
