@@ -264,7 +264,7 @@ export const papersDefinition = {
   },
   IBAN: {
     front: {
-      atttributesregex: [
+      atttributesRegex: [
         {
           name: 'IBAN',
           regex: /^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/,
