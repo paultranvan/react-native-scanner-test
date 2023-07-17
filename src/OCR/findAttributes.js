@@ -267,7 +267,6 @@ const postProcessing = attributes => {
 };
 
 const findTextBounds = OCRResult => {
-  console.log(OCRResult);
   let {left, top} = OCRResult[0].bounding; // init
   let bottom = top;
   let right = left;
@@ -279,12 +278,13 @@ const findTextBounds = OCRResult => {
       left = block.bounding.left;
     }
     if (block.bounding.top + block.bounding.height > bottom) {
-      bottom = block.bounding.top;
+      bottom = block.bounding.top + block.bounding.height;
     }
     if (block.bounding.left + block.bounding.width > right) {
       right = block.bounding.left + block.bounding.width;
     }
   }
+  console.log('text bounds')
   console.log({left, top, bottom, right});
   return {left, top, right, bottom};
 };
