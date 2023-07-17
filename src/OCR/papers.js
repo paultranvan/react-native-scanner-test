@@ -52,6 +52,7 @@ export const papersDefinition = {
         {
           type: 'date',
           name: 'issueDate',
+          dateFormat: 'DDMMYYYY',
           mandatory: true,
           bounding: {
             height: 44,
@@ -59,11 +60,12 @@ export const papersDefinition = {
             top: 362,
             width: 198,
           },
-          textRules: [{regex: /\^4a/}, {regex: /\^./}],
+          textRules: [{regex: /\^4a/}, {regex: /\^./}, {regex: /[.]/g}],
         },
         {
           type: 'date',
           name: 'expirationDate',
+          dateFormat: 'DDMMYYYY',
           mandatory: true,
           fixedSize: true,
           bounding: {
@@ -72,7 +74,7 @@ export const papersDefinition = {
             top: 429,
             width: 204,
           },
-          textRules: [{regex: /^4b/}, {regex: /^\./}],
+          textRules: [{regex: /^4b/}, {regex: /^\./}, {regex: /[.]/g}],
         },
         {
           type: 'string',
