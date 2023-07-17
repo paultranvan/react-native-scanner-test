@@ -94,6 +94,7 @@ export const papersDefinition = {
         width: 401,
         height: 253,
       },
+      textShift: {bottom: 217, left: 3, right: 370, top: 6},
       attributesBoxes: [
         {
           type: 'string',
@@ -105,10 +106,8 @@ export const papersDefinition = {
             order: 1,
           },
           bounding: {
-            height: 9,
-            left: 40,
-            top: 34,
-            width: 36,
+            left: 26,
+            top: 24,
           },
         },
         {
@@ -121,10 +120,26 @@ export const papersDefinition = {
             order: 2,
           },
           bounding: {
-            height: 10,
-            left: 41,
-            top: 52,
-            width: 35,
+            left: 26,
+            top: 42,
+          },
+        },
+        {
+          type: 'date',
+          name: 'issueDateA',
+          bounding: {
+            left: 163,
+            top: 51,
+            width: 32,
+            height: 7,
+          },
+        },
+        {
+          type: 'date',
+          name: 'issueDateB',
+          bounding: {
+            left: 163,
+            top: 75,
           },
         },
       ],
@@ -137,10 +152,10 @@ export const papersDefinition = {
         height: 909,
       },
       textShift: {
-        left: 48,
-        top: 20,
-        right: 33,
-        bottom: 71,
+        bottom: 254,
+        left: 12,
+        right: 429,
+        top: 126,
       },
       referenceBox: {
         bounding: {
