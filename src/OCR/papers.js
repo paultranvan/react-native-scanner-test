@@ -32,10 +32,10 @@ export const papersDefinition = {
             top: 115,
           },
           textRules: [
-            {regexp: /^1./},
-            {regexp: /^[\^4n]/},
-            {regexp: /[Aa]$/},
-            {regexp: /^a|a$/g},
+            {regex: /^1./},
+            {regex: /^[\^4n]/},
+            {regex: /[Aa]$/},
+            {regex: /^a|a$/g},
           ],
         },
         {
@@ -47,7 +47,7 @@ export const papersDefinition = {
             left: 428,
             top: 201,
           },
-          textRules: [{regexp: /^[\^4n]/}],
+          textRules: [{regex: /^[\^4n]/}],
         },
         {
           type: 'date',
@@ -59,7 +59,7 @@ export const papersDefinition = {
             top: 362,
             width: 198,
           },
-          textRules: [{regexp: /\^4a/}, {regexp: /\^./}],
+          textRules: [{regex: /\^4a/}, {regex: /\^./}],
         },
         {
           type: 'date',
@@ -72,7 +72,7 @@ export const papersDefinition = {
             top: 429,
             width: 204,
           },
-          textRules: [{regexp: /^4b/}, {regexp: /^\./}],
+          textRules: [{regex: /^4b/}, {regex: /^\./}],
         },
         {
           type: 'string',
@@ -173,7 +173,7 @@ export const papersDefinition = {
             left: 519,
             top: 158,
           },
-          textRules: [{regexp: /[=]/g, replace: ' '}],
+          textRules: [{regex: /[=]/g, replace: ' '}],
         },
       ],
     },
@@ -222,5 +222,26 @@ export const papersDefinition = {
       ],
     },
     back: {},
+  },
+  IBAN: {
+    front: {
+      atttributesregex: [
+        {
+          name: 'IBAN',
+          regex: /^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/,
+        },
+        {
+          name: 'BIC',
+          regex: /^[A-Z]{4}([A-Z]{2})[A-Z0-9]{2}([A-Z0-9]{3})?$/,
+          oneWord: true,
+          validationRules: [
+            {
+              regexGroupIdx: 1,
+              validationType: 'ISOCountry',
+            },
+          ],
+        },
+      ],
+    },
   },
 };

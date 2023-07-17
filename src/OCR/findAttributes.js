@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {papersDefinition} from './papers';
+import {ISOCountries} from './consts';
 
 const DISTANCE_TOLERANCE = 40;
 const SAME_LINE_MAX_Y_DIFF = 5;
@@ -12,6 +13,10 @@ const normalizeReferenceText = text => {
     .replace(/\s/g, '')
     .replace(/ç/g, 'c')
     .replace(/'/g, '');
+};
+
+const removeSpaces = text => {
+  return text.replace(/\s/g, '');
 };
 
 const computeDistance = (box1, box2, yWeight = 1) => {
@@ -200,10 +205,13 @@ const normalizeBounds = (
 
 const postTextProcessingRules = (rules, str) => {
   let newStr = str;
+  if (!rules) {
+    return str;
+  }
   for (const rule of rules) {
-    if (rule.regexp) {
+    if (rule.regex) {
       // Default is removing
-      newStr = newStr.replace(rule.regexp, rule.replace || '');
+      newStr = newStr.replace(rule.regex, rule.replace || '');
     }
   }
   return newStr;
@@ -244,11 +252,16 @@ const postProcessing = attributes => {
   }
   const processed = textProcessed
     .filter(attr => !attr.group)
-    .map(attr => ({
-      name: attr.name,
-      value: attr.value,
-      distance: attr.distance,
-    }))
+    .map(attr => {
+      const attribute = {
+        name: attr.name,
+        value: attr.value,
+      };
+      if (attr.distance) {
+        attribute.distance = attr.distance;
+      }
+      return attribute;
+    })
     .concat(mergedGroups);
   return processed;
 };
@@ -276,7 +289,7 @@ const findTextBounds = OCRResult => {
   return {left, top, right, bottom};
 };
 
-const findAttributesBox = (
+const findAttributesByBox = (
   OCRResult,
   paper,
   refBounds,
@@ -285,7 +298,9 @@ const findAttributesBox = (
   imgWidth,
   imgHeight,
 ) => {
-  const attributesToFind = paper.attributesBoxes.filter(att => att.mandatory);
+  const attributesToFind = paper.attributesBoxes.filter(
+    att => !(att.mandatory === false),
+  );
 
   // could be used for cases where the paper is not well centered
   let leftShift = 0;
@@ -483,6 +498,102 @@ const findAttributesBox = (
   return foundAttributes;
 };
 
+const checkCountryCode = code => {
+  console.log('iso country : ', ISOCountries[code]);
+  return !!ISOCountries[code];
+};
+
+const checkValidationRules = (attribute, match) => {
+  let isValid = true;
+  for (const rule of attribute.validationRules) {
+    if (!isValid) {
+      return isValid;
+    }
+    if (rule.validationType === 'ISOCountry') {
+      isValid = checkCountryCode(match[rule.regexGroupIdx]);
+    }
+  }
+  return isValid;
+};
+
+const findAttributeInText = (attribute, text) => {
+  const normalizedText = attribute.oneWord ? text : removeSpaces(text);
+  console.log({normalizedText});
+  const result = normalizedText.match(attribute.regex);
+  if (result?.length > 0) {
+    console.log('GOTCHA : ', result);
+    if (attribute.validationRules?.length > 0) {
+      if (!checkValidationRules(attribute, result)) {
+        console.log('does not repsect validation rule !');
+        return null;
+      }
+    }
+    return {
+      name: attribute.name,
+      value: result[0],
+    };
+  }
+  return null;
+};
+
+const findAttributeInBlocks = (OCRResult, attribute) => {
+  for (const block of OCRResult) {
+    const attr = findAttributeInText(attribute, block.text);
+    if (attr) {
+      return attr;
+    }
+  }
+};
+
+const findAttributeInLines = (OCRResult, attribute) => {
+  for (const block of OCRResult) {
+    for (const line of block.lines) {
+      const attr = findAttributeInText(attribute, line.text);
+      if (attr) {
+        return attr;
+      }
+    }
+  }
+};
+
+const findAttributeInElements = (OCRResult, attribute) => {
+  for (const block of OCRResult) {
+    for (const line of block.lines) {
+      for (const el of line.elements) {
+        const attr = findAttributeInText(attribute, el.text);
+        if (attr) {
+          return attr;
+        }
+      }
+    }
+  }
+};
+
+const findAttributesByRegex = (OCRResult, paper) => {
+  const attributesToFind = paper.atttributesregex.filter(
+    att => !(att.mandatory === false),
+  );
+  const foundAttributes = [];
+  for (const attr of attributesToFind) {
+    const resultByBlock = findAttributeInBlocks(OCRResult, attr);
+    if (resultByBlock) {
+      foundAttributes.push(resultByBlock);
+      continue;
+    }
+    const resultByLines = findAttributeInLines(OCRResult, attr);
+    if (resultByLines) {
+      foundAttributes.push(resultByLines);
+      continue;
+    }
+    const resultByElements = findAttributeInElements(OCRResult, attr);
+    if (resultByElements) {
+      foundAttributes.push(resultByElements);
+      continue;
+    }
+  }
+  return foundAttributes;
+};
+
 const findReferenceTextBound = (
   blocks,
   paper,
@@ -605,39 +716,48 @@ export const findAttributes = (OCRResult, paperType, width, height) => {
   console.log({paper});
 
   if (OCRResult?.length > 0) {
-    const refBounding = findReferenceTextBound(
-      OCRResult,
-      paper,
-      xScalingFactor,
-      yScalingFactor,
-    );
+    let refBounding;
+    // const refBounding = findReferenceTextBound(
+    //   OCRResult,
+    //   paper,
+    //   xScalingFactor,
+    //   yScalingFactor,
+    // );
 
-    if (!refBounding) {
-      console.log('!!!!!!!!!!!!!!!No reference zone found');
-      return;
-    }
+    // if (!refBounding) {
+    //   console.log('!!!!!!!!!!!!!!!No reference zone found');
+    //   return;
+    // }
     //logOCRElements(OCRResult);
 
-    const xScalingFactor = paper.size.width / width;
-    const yScalingFactor = paper.size.height / height;
+    let attributesByBox = [];
 
-    console.log({xScalingFactor, yScalingFactor});
+    if (paper.size?.width && paper.size?.height) {
+      const xScalingFactor = paper.size.width / width;
+      const yScalingFactor = paper.size.height / height;
 
-    const foundAttributes = findAttributesBox(
-      OCRResult,
-      paper,
-      refBounding,
-      xScalingFactor,
-      yScalingFactor,
-      width,
-      height,
-    );
+      console.log({xScalingFactor, yScalingFactor});
+
+      attributesByBox = findAttributesByBox(
+        OCRResult,
+        paper,
+        refBounding,
+        xScalingFactor,
+        yScalingFactor,
+        width,
+        height,
+      );
+    }
+
+    const attributesByRegex = findAttributesByRegex(OCRResult, paper);
+    console.log('attributes by regexo : ', attributesByRegex);
 
     console.log({refBounding});
 
+    const foundAttributes = attributesByBox.concat(attributesByRegex);
+
     console.log('FOUND ATTRIBUTES : ', foundAttributes);
     const processedAttributes = postProcessing(foundAttributes);
-    console.log({processedAttributes});
 
     console.log('--------------PROCESSED ATTRIBUTES : ', processedAttributes);
 

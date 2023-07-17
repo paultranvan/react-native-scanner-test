@@ -46,7 +46,7 @@ export const ImageOCR = ({
           console.log('find matchign attributes');
 
           startTime = performance.now();
-          findAttributes(result, 'identityCard', originalWidth, originalHeight);
+          findAttributes(result, 'IBAN', originalWidth, originalHeight);
           endTime = performance.now();
           console.log(`Fiond attributes took ${endTime - startTime} ms.`);
         }
