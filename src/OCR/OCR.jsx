@@ -34,7 +34,7 @@ export const OCR = ({uri}) => {
     try {
       const img = response.assets[0];
       const result = await MlkitOcr.detectFromUri(img.uri);
-      console.log('img uri before set : ', img.uri);
+      console.log('img : ', img);
       setImgURI(img.uri);
       setOCRResult(result);
       setImgDimensions({width: img.width, height: img.height});
@@ -56,16 +56,6 @@ export const OCR = ({uri}) => {
 
   if (!imgURI && !OCRResult) {
     getFromGallery();
-  }
-
-  if (imgURI && !imgDimensions) {
-    // We need the native module to have the actual image size.
-    // Otherwise, the Image.getSize return a size depending on the phone dp
-    // https://github.com/facebook/react-native/issues/33498
-    NativeModules.RNImageSize.getSize(imgURI).then(size => {
-      console.log('---------size : ', size);
-      setImgDimensions({width: size.width, height: size.height});
-    });
   }
 
   return (
