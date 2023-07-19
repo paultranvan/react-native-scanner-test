@@ -728,12 +728,18 @@ const logOCRElements = OCRResult => {
   }
 };
 
-export const findAttributes = (OCRResult, paperType, width, height) => {
+export const findAttributes = (
+  OCRResult,
+  paperType,
+  paperFace,
+  width,
+  height,
+) => {
   // TODO should detect with levheinstein distance? Beware of false positive...
   console.log('OCR result : ', OCRResult);
   console.log({width, height});
 
-  const paper = papersDefinition[paperType].front;
+  const paper = papersDefinition[paperType][paperFace];
   console.log({paper});
 
   if (OCRResult?.length > 0) {
