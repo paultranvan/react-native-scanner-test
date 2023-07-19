@@ -235,7 +235,7 @@ const postProcessing = attributes => {
   const textProcessed = attributes.map(attr => {
     return {
       ...attr,
-      value: postTextProcessingRules(attr.textRules, attr.value),
+      value: postTextProcessingRules(attr.postTextRules, attr.value),
     };
   });
 
@@ -480,7 +480,7 @@ const findAttributesByBox = (
         name: attr.name,
         value: matchingEl.text,
         distance: minDistance,
-        textRules: attr.textRules || [],
+        postTextRules: attr.postTextRules || [],
         group: attr.group,
       });
     }
@@ -552,6 +552,7 @@ const findAttributeInText = (attribute, text) => {
     return {
       name: attribute.name,
       value: result[0],
+      postTextRules: attribute.postTextRules,
     };
   }
   return null;

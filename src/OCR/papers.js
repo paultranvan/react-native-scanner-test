@@ -31,7 +31,7 @@ export const papersDefinition = {
             left: 130,
             top: 26,
           },
-          textRules: [
+          postTextRules: [
             {regex: /^1./},
             {regex: /^[\^4n]/},
             {regex: /[Aa]$/},
@@ -47,7 +47,7 @@ export const papersDefinition = {
             left: 130,
             top: 52,
           },
-          textRules: [{regex: /^[\^4n]/}],
+          postTextRules: [{regex: /^[\^4n]/}],
         },
         {
           type: 'date',
@@ -60,7 +60,7 @@ export const papersDefinition = {
             top: 96,
             width: 57,
           },
-          textRules: [{regex: /\^4a/}, {regex: /\^./}, {regex: /[.,]/g}],
+          postTextRules: [{regex: /\^4a/}, {regex: /\^./}, {regex: /[.,]/g}],
         },
         {
           type: 'date',
@@ -74,7 +74,7 @@ export const papersDefinition = {
             top: 115,
             width: 71,
           },
-          textRules: [{regex: /^4b/}, {regex: /^\./}, {regex: /[.,]/g}],
+          postTextRules: [{regex: /^4b/}, {regex: /^\./}, {regex: /[.,]/g}],
         },
         {
           type: 'string',
@@ -196,7 +196,7 @@ export const papersDefinition = {
             left: 519,
             top: 158,
           },
-          textRules: [{regex: /[=]/g, replace: ' '}],
+          postTextRules: [{regex: /[=]/g, replace: ' '}],
         },
       ],
     },
@@ -221,7 +221,45 @@ export const papersDefinition = {
             top: 176,
           },
           fullLine: true,
-          textRules: [{regex: /[.]/g}],
+          postTextRules: [{regex: /[.,]/g}],
+        },
+      ],
+    },
+  },
+  residencePermit: {
+    front: {
+      size: {
+        width: 614,
+        height: 390,
+      },
+      attributesBoxes: [
+        {
+          type: 'date',
+          dateFormat: 'DDMMYYYY',
+          name: 'expirationDate',
+          bounding: {
+            left: 214,
+            top: 171,
+          },
+          postTextRules: [{regex: /[.,/]/g}],
+        },
+      ],
+    },
+    back: {
+      size: {
+        width: 615,
+        height: 384,
+      },
+      attributesRegex: [
+        {
+          name: 'cardNumber',
+          regex: /<[0-9]{10}</,
+          postTextRules: [{regex: /</g}],
+        },
+        {
+          name: 'country',
+          regex: /[0-9][A-Z]{3}</,
+          postTextRules: [{regex: /^[0-9]/}, {regex: /<$/}],
         },
       ],
     },
