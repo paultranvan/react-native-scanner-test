@@ -5,7 +5,7 @@ export const papersDefinition = {
         width: 415,
         height: 254,
       },
-      textBounds: {
+      textBounding: {
         bottom: 237,
         left: 9,
         right: 409,
@@ -153,11 +153,11 @@ export const papersDefinition = {
         width: 1333,
         height: 909,
       },
-      textShift: {
-        bottom: 254,
-        left: 12,
-        right: 429,
-        top: 126,
+      textBounding: {
+        bottom: 845,
+        left: 41,
+        right: 1312,
+        top: 16,
       },
       referenceBox: {
         bounding: {
@@ -171,7 +171,7 @@ export const papersDefinition = {
       attributesRegex: [
         {
           name: 'cardNumber',
-          regex: /^[0-9]{2}[0-1][0-9][0-9]{5}[0-9]{6}[0-9]{3}[0-9]{2}$/,
+          regex: /^[0-9]{12}/,
         },
       ],
       attributesBoxes: [

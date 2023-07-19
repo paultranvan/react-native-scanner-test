@@ -390,9 +390,11 @@ const findAttributesByBox = (
     let attrImgRatioX, attrImgRatioY;
     if (notCentered) {
       attrImgRatioX =
-        attr.bounding.left / (paper.textBounds.right - paper.textBounds.left);
+        attr.bounding.left /
+        (paper.textBounding.right - paper.textBounding.left);
       attrImgRatioY =
-        attr.bounding.top / (paper.textBounds.bottom - paper.textBounds.top);
+        attr.bounding.top /
+        (paper.textBounding.bottom - paper.textBounding.top);
     } else {
       attrImgRatioX = attr.bounding.left / paper.size.width;
       attrImgRatioY = attr.bounding.top / paper.size.height;
