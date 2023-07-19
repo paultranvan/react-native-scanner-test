@@ -2,14 +2,14 @@ export const papersDefinition = {
   driver: {
     front: {
       size: {
-        width: 1420,
-        height: 897,
+        width: 415,
+        height: 254,
       },
-      textShift: {
-        left: 18,
-        top: 26,
-        right: 36,
-        bottom: 66,
+      textBounds: {
+        bottom: 237,
+        left: 9,
+        right: 409,
+        top: 4,
       },
       referenceBox: {
         bounding: {
@@ -27,9 +27,9 @@ export const papersDefinition = {
           mandatory: true,
           fullLine: true,
           bounding: {
-            height: 57,
-            left: 379,
-            top: 115,
+            height: 18,
+            left: 130,
+            top: 26,
           },
           textRules: [
             {regex: /^1./},
@@ -43,9 +43,9 @@ export const papersDefinition = {
           name: 'firstName',
           mandatory: true,
           bounding: {
-            height: 47,
-            left: 428,
-            top: 201,
+            height: 13,
+            left: 130,
+            top: 52,
           },
           textRules: [{regex: /^[\^4n]/}],
         },
@@ -55,12 +55,12 @@ export const papersDefinition = {
           dateFormat: 'DDMMYYYY',
           mandatory: true,
           bounding: {
-            height: 44,
-            left: 426,
-            top: 362,
-            width: 198,
+            height: 13,
+            left: 129,
+            top: 96,
+            width: 57,
           },
-          textRules: [{regex: /\^4a/}, {regex: /\^./}, {regex: /[.]/g}],
+          textRules: [{regex: /\^4a/}, {regex: /\^./}, {regex: /[.,]/g}],
         },
         {
           type: 'date',
@@ -69,12 +69,12 @@ export const papersDefinition = {
           mandatory: true,
           fixedSize: true,
           bounding: {
-            height: 48,
-            left: 419,
-            top: 429,
-            width: 204,
+            height: 16,
+            left: 129,
+            top: 115,
+            width: 71,
           },
-          textRules: [{regex: /^4b/}, {regex: /^\./}, {regex: /[.]/g}],
+          textRules: [{regex: /^4b/}, {regex: /^\./}, {regex: /[.,]/g}],
         },
         {
           type: 'string',

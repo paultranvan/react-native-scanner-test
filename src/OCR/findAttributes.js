@@ -386,15 +386,13 @@ const findAttributesByBox = (
 
   for (const attr of attributesToFind) {
     console.log('------attr : ', attr);
-    const notCentered = false; // TODO : détecter quand non centré ? nécessaire ? tester...
+    const notCentered = true; // TODO : détecter quand non centré ? nécessaire ? tester...
     let attrImgRatioX, attrImgRatioY;
     if (notCentered) {
       attrImgRatioX =
-        attr.bounding.left /
-        (paper.size.width - paper.textShift.left - paper.textShift.right);
+        attr.bounding.left / (paper.textBounds.right - paper.textBounds.left);
       attrImgRatioY =
-        attr.bounding.top /
-        (paper.size.height - paper.textShift.top - paper.textShift.bottom);
+        attr.bounding.top / (paper.textBounds.bottom - paper.textBounds.top);
     } else {
       attrImgRatioX = attr.bounding.left / paper.size.width;
       attrImgRatioY = attr.bounding.top / paper.size.height;
