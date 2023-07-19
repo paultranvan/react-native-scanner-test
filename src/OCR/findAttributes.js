@@ -1,10 +1,7 @@
-import React from 'react';
-
 import {papersDefinition} from './papers';
-import {ISOCountries} from './consts';
+import {COUNTRIES_ISO} from './consts';
 
 const DISTANCE_TOLERANCE = 40;
-const SAME_LINE_MAX_Y_DIFF = 5;
 
 const normalizeReferenceText = text => {
   // TODO: strip weird character & co ?
@@ -108,8 +105,8 @@ const computeDistanceByBoxRatio = (
   const boxImgRatioX = (box1.left - leftShift) / imgWidth;
   const boxImgRatioY = (box1.top - topShift) / imgHeight;
 
-  console.log({boxImgRatioX, boxImgRatioY});
-  console.log({attrImgRatioX, attrImgRatioY});
+  //console.log({boxImgRatioX, boxImgRatioY});
+  //console.log({attrImgRatioX, attrImgRatioY});
 
   const xDist = Math.pow(boxImgRatioX - attrImgRatioX, 2);
   const yDist = Math.pow(boxImgRatioY - attrImgRatioY, 2);
@@ -364,13 +361,17 @@ const findAttributesByBox = (
   // leftShift = 0;
   // topShift = 0;
 
-  const {top, bottom, left, right} = findTextBounds(OCRResult);
-  const textWidth = right - left;
-  const textHeight = bottom - top;
-  console.log({textHeight, textWidth});
-  leftShift = left;
-  topShift = top;
-  console.log({leftShift, topShift});
+  let textHeight, textWidth;
+  let handleNotCentered = paper.textBounding ? true : false;
+  if (handleNotCentered) {
+    const textBounds = findTextBounds(OCRResult);
+    textWidth = textBounds.right - textBounds.left;
+    textHeight = textBounds.bottom - textBounds.top;
+    console.log({textHeight, textWidth});
+    leftShift = textBounds.left;
+    topShift = textBounds.top;
+    console.log({leftShift, topShift});
+  }
 
   const foundAttributes = [];
 
@@ -388,7 +389,7 @@ const findAttributesByBox = (
     console.log('------attr : ', attr);
     const notCentered = true; // TODO : détecter quand non centré ? nécessaire ? tester...
     let attrImgRatioX, attrImgRatioY;
-    if (notCentered) {
+    if (handleNotCentered) {
       attrImgRatioX =
         attr.bounding.left /
         (paper.textBounding.right - paper.textBounding.left);
@@ -431,7 +432,7 @@ const findAttributesByBox = (
           );*/
 
           let distance;
-          if (notCentered) {
+          if (handleNotCentered) {
             distance = computeDistanceByBoxRatio(
               el.bounding,
               textWidth,
