@@ -453,11 +453,11 @@ const findAttributesByBox = (
           }
 
           console.log('dist : ', distance);
-          console.log('el : ', el);
+          //console.log('el : ', el);
           //console.log('el text : ', el.text);
           // console.log('normalized bounds : ', bounds);
           if (distance < minDistance) {
-            console.log('found min dist');
+            console.log('found min dist for el ', el);
             matchingEl = {...el};
 
             minDistance = distance;
@@ -520,8 +520,11 @@ const findAttributesByBox = (
 };
 
 const checkCountryCode = code => {
-  console.log('iso country : ', ISOCountries[code]);
-  return !!ISOCountries[code];
+  const foundCountry = COUNTRIES_ISO.find(
+    country => country.code2 === code || country.code3 === code,
+  );
+  console.log('iso country : ', foundCountry);
+  return !!foundCountry;
 };
 
 const checkValidationRules = (attribute, match) => {
@@ -539,7 +542,6 @@ const checkValidationRules = (attribute, match) => {
 
 const findAttributeInText = (attribute, text) => {
   const normalizedText = attribute.oneWord ? text : removeSpaces(text);
-  console.log({normalizedText});
   const result = normalizedText.match(attribute.regex);
   if (result?.length > 0) {
     console.log('GOTCHA : ', result);
