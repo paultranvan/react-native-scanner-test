@@ -590,8 +590,8 @@ const findAttributeInElements = (OCRResult, attribute) => {
 };
 
 const findAttributesByRegex = (OCRResult, paper) => {
-  const attributesToFind = paper.atttributesRegex
-    ? paper.atttributesRegex.filter(att => !(att.mandatory === false))
+  const attributesToFind = paper.attributesRegex
+    ? paper.attributesRegex.filter(att => !(att.mandatory === false))
     : [];
   const foundAttributes = [];
   for (const attr of attributesToFind) {
@@ -775,7 +775,7 @@ export const findAttributes = (OCRResult, paperType, width, height) => {
     const attributesByRegex = findAttributesByRegex(OCRResult, paper);
     console.log('attributes by regexo : ', attributesByRegex);
 
-    console.log({refBounding});
+    console.log('attributes by box : ', attributesByBox);
 
     const foundAttributes = attributesByBox.concat(attributesByRegex);
 

@@ -168,6 +168,12 @@ export const papersDefinition = {
         },
         text: 'CARTENATIONALE',
       },
+      attributesRegex: [
+        {
+          name: 'cardNumber',
+          regex: /^[0-9]{2}[0-1][0-9][0-9]{5}[0-9]{6}[0-9]{3}[0-9]{2}$/,
+        },
+      ],
       attributesBoxes: [
         {
           type: 'string',
@@ -266,7 +272,7 @@ export const papersDefinition = {
   },
   IBAN: {
     front: {
-      atttributesRegex: [
+      attributesRegex: [
         {
           name: 'IBAN',
           regex: /^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/,
