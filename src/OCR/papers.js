@@ -232,6 +232,9 @@ export const papersDefinition = {
         width: 614,
         height: 390,
       },
+      referenceBox: {
+        text: 'TITREDESEJOUR',
+      },
       attributesBoxes: [
         {
           type: 'date',
@@ -249,6 +252,9 @@ export const papersDefinition = {
       size: {
         width: 615,
         height: 384,
+      },
+      referenceBox: {
+        text: 'TITREDESEJOUR',
       },
       attributesRegex: [
         {
@@ -310,6 +316,9 @@ export const papersDefinition = {
   },
   IBAN: {
     front: {
+      referenceBox: {
+        text: 'IBAN',
+      },
       attributesRegex: [
         {
           name: 'IBAN',

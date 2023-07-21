@@ -298,7 +298,7 @@ const findTextBounds = OCRResult => {
       right = block.bounding.left + block.bounding.width;
     }
   }
-  console.log('text bounds')
+  console.log('text bounds');
   console.log({left, top, bottom, right});
   return {left, top, right, bottom};
 };
@@ -724,6 +724,18 @@ const findReferenceTextBound = (
   return null;
 };
 
+const findPaper = (OCRResult, papers) => {
+  for (const [paperName, paper] of Object.entries(papers)) {
+    if (paper.front && findReferenceTextBound(OCRResult, paper.front)) {
+      return paper.front;
+    }
+    if (paper.back && findReferenceTextBound(OCRResult, paper.back)) {
+      return paper.back;
+    }
+  }
+  return null;
+};
+
 const logOCRElements = OCRResult => {
   for (const block of OCRResult) {
     for (const line of block.lines) {
@@ -745,7 +757,12 @@ export const findAttributes = (
   console.log('OCR result : ', OCRResult);
   console.log({width, height});
 
-  const paper = papersDefinition[paperType][paperFace];
+  // try to auto find paper
+  let paper = findPaper(OCRResult, papersDefinition);
+  console.log('Auto find paper : ', paper)
+  if (!paper) {
+    paper = papersDefinition[paperType][paperFace];
+  }
   console.log({paper});
 
   if (OCRResult?.length > 0) {
