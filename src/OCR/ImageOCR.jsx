@@ -38,6 +38,10 @@ export const ImageOCR = ({
       try {
         if (imgURI && originalWidth && originalHeight) {
           console.log('normalize img and OCR with imgURI : ', imgURI);
+          const imgSize = {
+            width: originalWidth,
+            height: originalHeight,
+          };
           //const normalizedImage = await normalizeImageSize(imgURI, 450, 285);
           let startTime = performance.now();
           const result = await MlkitOcr.detectFromUri(imgURI);
@@ -46,13 +50,7 @@ export const ImageOCR = ({
           console.log('find matchign attributes');
 
           startTime = performance.now();
-          findAttributes(
-            result,
-            'driver',
-            'front',
-            originalWidth,
-            originalHeight,
-          );
+          findAttributes(result, 'residencePermit', 'back', imgSize);
           endTime = performance.now();
           console.log(`Fiond attributes took ${endTime - startTime} ms.`);
         }

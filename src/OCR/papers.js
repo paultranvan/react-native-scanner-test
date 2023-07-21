@@ -1,5 +1,38 @@
-export const papersDefinition = {
-  driver: {
+import {COUNTRIES_ISO} from './consts';
+
+/**
+ * Definitions of papers' templates.
+ *
+ * Each entry is an object composed of a front and back (optional) describing the paper.
+ * The structure of each paper is the following:
+ * - size: the width and the height of the template
+ * - textBouding: the bounding of the text area detected by the OCR, i.e. the smallest distance bewteen
+ *   the paper bounds and a text block.
+ * - referenceBox: used to detect the type of the paper. For now, only the text is useful.
+ *   Note that it must be in uppercase, and without any space.
+ * - attributesBoxes: an array of attributes that should be found by their position. It is composed of:
+ *   - name: the attribute name
+ *   - type: the attribute type, i.e., string, date, number
+ *   - enabled (optional): whether the attribute search is enabled or not (for debug). Default is true.
+ *   - fullLine: (optional): when the text is splitted in several elements, useful to force the detection
+ *     on the whole line. Default is false.
+ *   - bouding: the attribute bounds on the template
+ *   - postTextRules: an array of rules to be applied on the text, in post-treatment. Note the rule position matters,
+ *     as they will be applied sequentially. Each rule is composed of:
+ *     - regex: the string pattern that should be found
+ *     - replace (optional): how the detected string should be replaced. Default is an empty string.
+ * - attributesRegex: an array of attributes that should be found by regex. It is composed of:
+ *   - name: the attribute name
+ *   - regex: the string pattern
+ *   - wholeWord (optional): whether the attribute is always in one word, and not splitted in several elements.
+ *     Default is false.
+ *   - validationRules: an array of rules to apply on the match string for further validation. It is composed of:
+ *     - regexGroupIdx: the index of the string in the match array by the regex.
+ *     - validationFn: a validation function to apply on the string.
+ * */
+export const papersDefinition = [
+  {
+    name: 'driver',
     front: {
       size: {
         width: 415,
@@ -24,7 +57,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'lastName',
-          mandatory: true,
+          enabled: true,
           fullLine: true,
           bounding: {
             height: 18,
@@ -41,7 +74,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'firstName',
-          mandatory: true,
+          enabled: true,
           bounding: {
             height: 13,
             left: 130,
@@ -53,7 +86,7 @@ export const papersDefinition = {
           type: 'date',
           name: 'issueDate',
           dateFormat: 'DDMMYYYY',
-          mandatory: true,
+          enabled: true,
           bounding: {
             height: 13,
             left: 129,
@@ -66,7 +99,7 @@ export const papersDefinition = {
           type: 'date',
           name: 'expirationDate',
           dateFormat: 'DDMMYYYY',
-          mandatory: true,
+          enabled: true,
           fixedSize: true,
           bounding: {
             height: 16,
@@ -79,7 +112,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'bottomTest',
-          mandatory: false,
+          enabled: false,
           fullLine: true,
           fixedSize: true,
           bounding: {
@@ -101,7 +134,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'cardNumberLine1',
-          mandatory: true,
+          enabled: true,
           fixedSize: true,
           group: {
             name: 'cardNumber',
@@ -115,7 +148,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'cardNumberLine2',
-          mandatory: true,
+          enabled: true,
           fixedSize: true,
           group: {
             name: 'cardNumber',
@@ -147,7 +180,8 @@ export const papersDefinition = {
       ],
     },
   },
-  identityCard: {
+  {
+    name: 'identityCard',
     front: {
       size: {
         width: 1333,
@@ -178,7 +212,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'cardNumber',
-          mandatory: true,
+          enabled: true,
           fixedSize: true,
           bounding: {
             height: 39,
@@ -190,7 +224,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'lastName',
-          mandatory: true,
+          enabled: true,
           bounding: {
             height: 42,
             left: 519,
@@ -226,7 +260,8 @@ export const papersDefinition = {
       ],
     },
   },
-  residencePermit: {
+  {
+    name: 'residencePermit',
     front: {
       size: {
         width: 614,
@@ -270,7 +305,8 @@ export const papersDefinition = {
       ],
     },
   },
-  passport: {
+  {
+    name: 'passport',
     front: {
       size: {
         width: 1529,
@@ -289,7 +325,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'passportNumber',
-          mandatory: true,
+          enabled: true,
           fixedSize: true,
           bounding: {
             height: 28,
@@ -301,7 +337,7 @@ export const papersDefinition = {
         {
           type: 'string',
           name: 'expirationDate',
-          mandatory: true,
+          enabled: true,
           fixedSize: true,
           fullLine: true,
           bounding: {
@@ -314,7 +350,8 @@ export const papersDefinition = {
     },
     back: {},
   },
-  IBAN: {
+  {
+    name: 'IBAN',
     front: {
       referenceBox: {
         text: 'IBAN',
@@ -331,11 +368,19 @@ export const papersDefinition = {
           validationRules: [
             {
               regexGroupIdx: 1,
-              validationType: 'ISOCountry',
+              validationFn: code => checkCountryCode(code),
             },
           ],
         },
       ],
     },
   },
+];
+
+export const checkCountryCode = code => {
+  console.log('country code : ', code);
+  const foundCountry = COUNTRIES_ISO.find(
+    country => country.code2 === code || country.code3 === code,
+  );
+  return !!foundCountry;
 };

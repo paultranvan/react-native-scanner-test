@@ -1,5 +1,4 @@
 import {papersDefinition} from './papers';
-import {COUNTRIES_ISO} from './consts';
 
 const DISTANCE_TOLERANCE = 40;
 
@@ -16,206 +15,25 @@ const removeSpaces = text => {
   return text.replace(/\s/g, '');
 };
 
-const computeDistance = (box1, box2, yWeight = 1) => {
-  // Euclidean dist
+const computeEuclideanDistance = (box1, box2) => {
   let xDist = Math.pow(box1.left - box2.left, 2);
-  let yDist = Math.pow(box1.top - box2.top, 2) * yWeight;
-  return Math.sqrt(xDist + yDist);
-};
-
-const computeDistanceWithRefDist = (box1, box2, distX, distY) => {
-  const kX = (box2.left + distX) / box1.left;
-  const kY = (box2.top + distY) / box1.top;
-
-  // const kX = 1;
-  // const kY = 2.23;
-  let xDist = Math.pow(box1.left * kX - distX - box2.left, 2);
-  let yDist = Math.pow(box1.top * kY - distY - box2.top, 2);
-
-  console.log({xDist, yDist});
-  return Math.sqrt(xDist + yDist);
-};
-
-const computeDistance2 = (box1, box2, distX, distY, ratio) => {
-  const xNorm = (box1.left - distX) * ratio;
-  const yNorm = (box1.top - distY) * ratio;
-
-  console.log({xNorm, yNorm});
-
-  let xDist = Math.pow(xNorm - box2.left, 2);
-  let yDist = Math.pow(yNorm - box2.top, 2);
-
-  return Math.sqrt(xDist + yDist);
-};
-
-const computeDistance3 = (box1, box2, distX, distY, ratioX, ratioY) => {
-  let xNorm = box1.left - distX;
-  if (ratioX > 1) {
-    //xNorm / ratioX;
-    xNorm = xNorm / ratioX;
-  } else {
-    xNorm = xNorm * ratioX;
-  }
-  let yNorm = box1.top - distY;
-  if (ratioY > 1) {
-    //yNorm / ratioY;
-    yNorm = yNorm / ratioY;
-  } else {
-    yNorm = yNorm * ratioY;
-  }
-  //const yNorm = (box1.top - distY) / ratioY;
-
-  console.log({xNorm, yNorm});
-
-  let xDist = Math.pow(xNorm - box2.left, 2);
-  let yDist = Math.pow(yNorm - box2.top, 2);
-
-  console.log({xDist, yDist});
-
-  return Math.sqrt(xDist + yDist);
-};
-
-const computeDistanceByBoxRatioNotCentered = (
-  box1,
-  imgWidth,
-  imgHeight,
-  attrImgRatioX,
-  attrImgRatioY,
-) => {
-  // left and top shift are probably only necessary for non centered elements (if the attrImgRatio does not include the text shift )
-  const boxImgRatioX = box1.left / imgWidth;
-  const boxImgRatioY = box1.top / imgHeight;
-
-  const xDist = Math.pow(boxImgRatioX - attrImgRatioX, 2);
-  const yDist = Math.pow(boxImgRatioY - attrImgRatioY, 2);
-
+  let yDist = Math.pow(box1.top - box2.top, 2);
   return Math.sqrt(xDist + yDist);
 };
 
 const computeDistanceByBoxRatio = (
-  box1,
-  imgWidth,
-  imgHeight,
-  attrImgRatioX,
-  attrImgRatioY,
-  leftShift,
-  topShift,
+  boxBounding,
+  templateBounding,
+  shiftBounding,
+  imgSize,
 ) => {
-  // left and top shift are probably only necessary for non centered elements (if the attrImgRatio does not include the text shift )
-  const boxImgRatioX = (box1.left - leftShift) / imgWidth;
-  const boxImgRatioY = (box1.top - topShift) / imgHeight;
-
-  //console.log({boxImgRatioX, boxImgRatioY});
-  //console.log({attrImgRatioX, attrImgRatioY});
-
-  const xDist = Math.pow(boxImgRatioX - attrImgRatioX, 2);
-  const yDist = Math.pow(boxImgRatioY - attrImgRatioY, 2);
-
-  return Math.sqrt(xDist + yDist);
-};
-
-const getImageRatio = (refBounds, templateBounds) => {
-  const heightRatio =
-    refBounds.height > templateBounds.height
-      ? templateBounds.height / refBounds.height
-      : refBounds.height / templateBounds.height;
-
-  const widthRatio =
-    refBounds.width > templateBounds.width
-      ? templateBounds.width / refBounds.width
-      : refBounds.width / templateBounds.width;
-
-  return {heightRatio, widthRatio};
-};
-
-const compareRefBoundsWithTemplate = (refBounds, templateBounds) => {
-  const {heightRatio, widthRatio} = getImageRatio(refBounds, templateBounds);
-
-  console.log('top ratio : ', refBounds.top * heightRatio);
-  console.log('left ratio : ', refBounds.left * widthRatio);
-  console.log('heightRatio : ', refBounds.height * heightRatio);
-  console.log('widthRatio : ', refBounds.width * widthRatio);
-};
-
-const matchingLocationWithTolerance = (refLocation, location, tolerance) => {
-  return Math.abs(refLocation - location) <= tolerance;
-};
-
-const boxesAreCloseEnough = (box, refBox, tolerance) => {
-  const distance = computeDistance(box, refBox);
-  console.log('distance : ', distance);
-  return distance < tolerance;
-};
-
-const isMatchingZoneAttribute = (
-  templateAttributeZone,
-  bounding,
-  leftShift,
-  topShift,
-) => {
-  if (
-    matchingLocationWithTolerance(
-      templateAttributeZone.bounding.left,
-      bounding.left, //+ leftShift,
-      DISTANCE_TOLERANCE,
-    ) &&
-    matchingLocationWithTolerance(
-      templateAttributeZone.bounding.top,
-      bounding.top, // + topShift,
-      DISTANCE_TOLERANCE,
-    )
-  ) {
-    if (templateAttributeZone.fixedSize) {
-      if (
-        matchingLocationWithTolerance(
-          templateAttributeZone.bounding.height,
-          bounding.height,
-          DISTANCE_TOLERANCE,
-        ) &&
-        matchingLocationWithTolerance(
-          templateAttributeZone.bounding.width,
-          bounding.width,
-          DISTANCE_TOLERANCE,
-        )
-      ) {
-        return true;
-      }
-    } else {
-      return true;
-    }
-  }
-  return false;
-};
-
-const isMatchingBox = (templateAttributeZone, bounding) => {
-  return boxesAreCloseEnough(
-    templateAttributeZone.bounding,
-    bounding, //+ leftShift,
-    DISTANCE_TOLERANCE,
-  );
-};
-
-const normalizeBounds = (
-  bounds,
-  xScalingFactor,
-  yScalingFactor,
-  topShift = 0,
-  leftShift = 0,
-) => {
-  return {
-    //top: bounds.top * yScalingFactor + topShift,
-    top: (bounds.top + 0) * yScalingFactor,
-    //left: bounds.left * xScalingFactor + leftShift,
-    left: (bounds.left + 0) * xScalingFactor,
-    width: bounds.width * xScalingFactor,
-    height: bounds.height * yScalingFactor,
+  const normalizedBox = {
+    left: (boxBounding.left - shiftBounding.left) / imgSize.width,
+    top: (boxBounding.top - shiftBounding.top) / imgSize.height,
   };
-};
 
-// const isNextBoxSameLine = (bounds, nextBounds) => {
-//   const diffX = Math.abs(bounds.top - nextBounds.top)
-//   return diffX < SAME_LINE_MAX_Y_DIFF
-// }
+  return computeEuclideanDistance(normalizedBox, templateBounding);
+};
 
 const postTextProcessingRules = (rules, str) => {
   let newStr = str;
@@ -298,107 +116,43 @@ const findTextBounds = OCRResult => {
       right = block.bounding.left + block.bounding.width;
     }
   }
-  console.log('text bounds');
-  console.log({left, top, bottom, right});
   return {left, top, right, bottom};
 };
 
-const findAttributesByBox = (
-  OCRResult,
-  paper,
-  refBounds,
-  xScalingFactor,
-  yScalingFactor,
-  imgWidth,
-  imgHeight,
-) => {
+const findAttributesByBox = (OCRResult, paper, imgSize) => {
   const attributesToFind = paper.attributesBoxes
-    ? paper.attributesBoxes.filter(att => !(att.mandatory === false))
+    ? paper.attributesBoxes.filter(att => !(att.enabled === false))
     : [];
 
   // could be used for cases where the paper is not well centered
-  let leftShift = 0;
-  let topShift = 0;
-  let refDist = 0;
-  let refDistX = 0;
-  let refDistY = 0;
-  let widthRatio = 0;
-  let heightRatio = 0;
-  if (refBounds) {
-    const scaleRefBounds = normalizeBounds(
-      refBounds,
-      xScalingFactor,
-      yScalingFactor,
-    );
-    // leftShift = paper.referenceBox.bounding.left - scaleRefBounds.left;
-    // topShift = paper.referenceBox.bounding.top - scaleRefBounds.top;
+  const shiftBounding = {top: 0, left: 0};
+  const textAreaSize = {...imgSize};
 
-    leftShift =
-      refBounds.left * xScalingFactor - paper.referenceBox.bounding.left;
-    topShift = refBounds.top * yScalingFactor - paper.referenceBox.bounding.top;
-
-    leftShift =
-      refBounds.left - paper.referenceBox.bounding.left / xScalingFactor;
-    topShift = refBounds.top - paper.referenceBox.bounding.top / yScalingFactor;
-
-    widthRatio = refBounds.width / paper.referenceBox.bounding.width;
-    heightRatio = refBounds.height / paper.referenceBox.bounding.height;
-    leftShift = refBounds.left - paper.referenceBox.bounding.left * widthRatio;
-    topShift = refBounds.top - paper.referenceBox.bounding.top * heightRatio;
-
-    console.log('unscale ref bounds : ', refBounds);
-    console.log('scaleRefBounds : ', scaleRefBounds);
-    console.log('left shift : ', leftShift);
-    console.log('top shift : ', topShift);
-    console.log({widthRatio, heightRatio});
-
-    refDistX = Math.abs(scaleRefBounds.left - paper.referenceBox.bounding.left);
-    refDistY = Math.abs(scaleRefBounds.top - paper.referenceBox.bounding.top);
-    console.log('ref dist X: ', refDistX);
-    console.log('ref dist Y: ', refDistY);
-  }
-
-  // leftShift = 0;
-  // topShift = 0;
-
-  let textHeight, textWidth;
   let handleNotCentered = paper.textBounding ? true : false;
   if (handleNotCentered) {
     const textBounds = findTextBounds(OCRResult);
-    textWidth = textBounds.right - textBounds.left;
-    textHeight = textBounds.bottom - textBounds.top;
-    console.log({textHeight, textWidth});
-    leftShift = textBounds.left;
-    topShift = textBounds.top;
-    console.log({leftShift, topShift});
+    textAreaSize.width = textBounds.right - textBounds.left;
+    textAreaSize.height = textBounds.bottom - textBounds.top;
+    shiftBounding.left = textBounds.left;
+    shiftBounding.top = textBounds.top;
   }
 
   const foundAttributes = [];
 
-  // const elements = [];
-  // for (const block of OCRResult) {
-  //   for (const line of block.lines) {
-  //     for (const el of line.elements) {
-  //       //console.log('el : ', el);
-  //       elements.push(el);
-  //     }
-  //   }
-  // }
-
   for (const attr of attributesToFind) {
     console.log('------attr : ', attr);
+    const attrBouding = {left: 0, top: 0};
     const notCentered = true; // TODO : détecter quand non centré ? nécessaire ? tester...
-    let attrImgRatioX, attrImgRatioY;
     if (handleNotCentered) {
-      attrImgRatioX =
+      attrBouding.left =
         attr.bounding.left /
         (paper.textBounding.right - paper.textBounding.left);
-      attrImgRatioY =
+      attrBouding.top =
         attr.bounding.top /
         (paper.textBounding.bottom - paper.textBounding.top);
     } else {
-      attrImgRatioX = attr.bounding.left / paper.size.width;
-      attrImgRatioY = attr.bounding.top / paper.size.height;
+      attrBouding.left = attr.bounding.left / paper.size.width;
+      attrBouding.top = attr.bounding.top / paper.size.height;
     }
 
     let minDistance = 100000;
@@ -407,57 +161,21 @@ const findAttributesByBox = (
       for (const line of block.lines) {
         let cptLineElements = 0;
         for (const el of line.elements) {
-          const bounds = normalizeBounds(
-            el.bounding,
-            xScalingFactor,
-            yScalingFactor,
-            topShift,
-            leftShift,
-          );
-          //const distance = computeDistance(bounds, attr.bounding);
-          // const distance = computeDistanceWithRefDist(
-          //   bounds,
-          //   attr.bounding,
-          //   refDistX,
-          //   refDistY,
-          // );
-
-          /*const distance = computeDistance3(
-            el.bounding,
-            attr.bounding,
-            leftShift,
-            topShift,
-            widthRatio,
-            heightRatio,
-          );*/
-
           let distance;
-          if (handleNotCentered) {
-            distance = computeDistanceByBoxRatio(
-              el.bounding,
-              textWidth,
-              textHeight,
-              attrImgRatioX,
-              attrImgRatioY,
-              leftShift,
-              topShift,
-            );
-          } else {
-            distance = computeDistanceByBoxRatioNotCentered(
-              el.bounding,
-              imgWidth,
-              imgHeight,
-              attrImgRatioX,
-              attrImgRatioY,
-            );
-          }
+          const size = handleNotCentered ? textAreaSize : imgSize;
+          distance = computeDistanceByBoxRatio(
+            el.bounding,
+            attrBouding,
+            shiftBounding,
+            size,
+          );
 
-          console.log('dist : ', distance);
+          // console.log('dist : ', distance);
           //console.log('el : ', el);
           //console.log('el text : ', el.text);
           // console.log('normalized bounds : ', bounds);
           if (distance < minDistance) {
-            console.log('found min dist for el ', el);
+            //console.log('found min dist for el ', el);
             matchingEl = {...el};
 
             minDistance = distance;
@@ -486,45 +204,7 @@ const findAttributesByBox = (
     }
   }
 
-  console.log({leftShift, topShift});
-  // for (const attribute of attributesToFind) {
-  //   console.log('att to find : ', attribute);
-
-  //   for (const block of OCRResult) {
-  //     console.log('block : ', block);
-  //     for (const line of block.lines) {
-  //       console.log('line : ', line);
-  //       // TODO deal with splitted zones
-  //       for (const el of line.elements) {
-  //         console.log('element : ', el);
-  //         const isAttributeFound = isMatchingZoneAttribute(
-  //           attribute,
-  //           normalizeBounds(el.bounding, xScalingFactor, yScalingFactor),
-  //           leftShift,
-  //           topShift,
-  //         );
-  //         if (isAttributeFound) {
-  //           const foundAtt = {
-  //             name: attribute.name,
-  //             value: el.text,
-  //           };
-  //           console.log('ITS A MATCH : ', foundAtt);
-  //           foundAttributes.push(foundAtt);
-  //           // TODO: continue attribute loop
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
   return foundAttributes;
-};
-
-const checkCountryCode = code => {
-  const foundCountry = COUNTRIES_ISO.find(
-    country => country.code2 === code || country.code3 === code,
-  );
-  console.log('iso country : ', foundCountry);
-  return !!foundCountry;
 };
 
 const checkValidationRules = (attribute, match) => {
@@ -533,9 +213,10 @@ const checkValidationRules = (attribute, match) => {
     if (!isValid) {
       return isValid;
     }
-    if (rule.validationType === 'ISOCountry') {
-      isValid = checkCountryCode(match[rule.regexGroupIdx]);
-    }
+    isValid = rule.validationFn(match[rule.regexGroupIdx]);
+    // if (rule.validationType === 'ISOCountry') {
+    //   isValid = checkCountryCode(match[rule.regexGroupIdx]);
+    // }
   }
   return isValid;
 };
@@ -621,22 +302,18 @@ const findAttributesByRegex = (OCRResult, paper) => {
   return foundAttributes;
 };
 
-const findReferenceTextBound = (
-  blocks,
-  paper,
-  xScalingFactor,
-  yScalingFactor,
-) => {
+const findReferenceTextBound = (blocks, paper) => {
   if (!paper.referenceBox) {
     return null;
   }
 
-  const minLength = 1; // évite de prendre des caractères poubelles, comme le "I" pour CI. Mais trop haut et on loupe le "DE" du passeport...
+  // Useful to avoid being too aggressive on the include. Be careful of not setting it too high,
+  // as you can have legitimate 2 letters, e.g. "DE"
+  const minLength = 1;
   const referenceText = paper.referenceBox.text;
   console.log('ref text : ', referenceText);
 
   let splittedBlocksText = '';
-  let splittedBlocksBouding;
 
   for (const block of blocks) {
     for (const line of block.lines) {
@@ -645,176 +322,73 @@ const findReferenceTextBound = (
 
         if (normalizeRefText === referenceText) {
           console.log('-- Found reference matching box: exact');
-          return el.bounding;
+          return true;
         }
-        console.log('el text  : ', normalizeRefText);
-        // if (
-        //   normalizeRefText.length > minLength &&
-        //   normalizeRefText.includes(referenceText)
-        // ) {
-        //   console.log('text el includes ref text');
-        //   // find the reference text splitted into elements
-        //   let splittedText = '';
-        //   let bounding = {
-        //     left: 0,
-        //     height: 0,
-        //     width: 0,
-        //     top: 0,
-        //   };
-
-        //   // deal with one line for now
-        //   const line = block.lines[0];
-
-        //   let firstLineEl = true;
-        //   for (const el of line.elements) {
-        //     if (referenceText.includes(normalizeReferenceText(el.text))) {
-        //       if (firstLineEl) {
-        //         splittedText += el.text;
-        //         bounding = el.bounding;
-        //         firstLineEl = false;
-        //       } else {
-        //         splittedText += el.text;
-        //         // Manually compute the width from between the latest element
-        //         // and the most left.
-        //         bounding.width =
-        //           el.bounding.left + el.bounding.width - bounding.left;
-        //       }
-        //     }
-        //   }
-        //   console.log('splitted text : ', splittedText);
-        //   if (normalizeReferenceText(splittedText) === referenceText) {
-        //     console.log('-- Found reference matching box: splitted elements');
-        //     console.log('-- bounding : ', bounding);
-        //     console.log(
-        //       'dist : ',
-        //       computeDistance(
-        //         normalizeBounds(bounding, xScalingFactor, yScalingFactor),
-        //         paper.referenceBox.bounding,
-        //       ),
-        //     );
-        //     return bounding;
-        //   }
-        // }
-
         if (
           normalizeRefText.length > minLength &&
           referenceText.includes(normalizeRefText)
         ) {
           splittedBlocksText += normalizeRefText;
-
-          console.log('-- Found a possible splitted block');
-          if (!splittedBlocksBouding) {
-            splittedBlocksBouding = el.bounding;
-          } else {
-            splittedBlocksBouding.width =
-              el.bounding.left + el.bounding.width - splittedBlocksBouding.left;
-          }
-          console.log('splitted text : ', splittedBlocksText);
-          if (splittedBlocksText === referenceText) {
-            return splittedBlocksBouding;
-          }
         }
       }
     }
   }
-  if (splittedBlocksText === referenceText) {
+  console.log('block text : ', splittedBlocksText);
+  if (
+    splittedBlocksText === referenceText ||
+    splittedBlocksText.includes(referenceText)
+  ) {
     console.log('-- Found reference matching box: splitted blocks');
-    return splittedBlocksBouding;
+    return true;
   }
-  return null;
+  return false;
 };
 
 const findPaper = (OCRResult, papers) => {
-  for (const [paperName, paper] of Object.entries(papers)) {
+  for (const paper of papers) {
     if (paper.front && findReferenceTextBound(OCRResult, paper.front)) {
-      return paper.front;
+      return {name: paper.name, definition: paper.front};
     }
     if (paper.back && findReferenceTextBound(OCRResult, paper.back)) {
-      return paper.back;
+      return {name: paper.name, definition: paper.back};
     }
   }
   return null;
 };
 
-const logOCRElements = OCRResult => {
-  for (const block of OCRResult) {
-    for (const line of block.lines) {
-      for (const el of line.elements) {
-        console.log({el});
-      }
-    }
-  }
-};
-
-export const findAttributes = (
-  OCRResult,
-  paperType,
-  paperFace,
-  width,
-  height,
-) => {
+export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
   // TODO should detect with levheinstein distance? Beware of false positive...
   console.log('OCR result : ', OCRResult);
-  console.log({width, height});
+  console.log({imgSize});
 
-  // try to auto find paper
-  let paper = findPaper(OCRResult, papersDefinition);
-  console.log('Auto find paper : ', paper)
-  if (!paper) {
-    paper = papersDefinition[paperType][paperFace];
-  }
-  console.log({paper});
-
-  if (OCRResult?.length > 0) {
-    let refBounding;
-    // const refBounding = findReferenceTextBound(
-    //   OCRResult,
-    //   paper,
-    //   xScalingFactor,
-    //   yScalingFactor,
-    // );
-
-    // if (!refBounding) {
-    //   console.log('!!!!!!!!!!!!!!!No reference zone found');
-    //   return;
-    // }
-    //logOCRElements(OCRResult);
-
-    let attributesByBox = [];
-
-    if (paper.size?.width && paper.size?.height) {
-      const xScalingFactor = paper.size.width / width;
-      const yScalingFactor = paper.size.height / height;
-
-      console.log({xScalingFactor, yScalingFactor});
-
-      attributesByBox = findAttributesByBox(
-        OCRResult,
-        paper,
-        refBounding,
-        xScalingFactor,
-        yScalingFactor,
-        width,
-        height,
-      );
-    }
-
-    const attributesByRegex = findAttributesByRegex(OCRResult, paper);
-    console.log('attributes by regexo : ', attributesByRegex);
-
-    console.log('attributes by box : ', attributesByBox);
-
-    const foundAttributes = attributesByBox.concat(attributesByRegex);
-
-    console.log('FOUND ATTRIBUTES : ', foundAttributes);
-    const processedAttributes = postProcessing(foundAttributes);
-
-    console.log('--------------PROCESSED ATTRIBUTES : ', processedAttributes);
-
-    /*if (refBounding) {
-      compareRefBoundsWithTemplate(refBounding, driverLicenseBounds);
-    }*/
-  } else {
+  if (!OCRResult || OCRResult.length < 1) {
     return null;
   }
+
+  // try to auto find paper
+  const foundPaper = findPaper(OCRResult, papersDefinition);
+  console.log('Auto find paper : ', foundPaper);
+  const paper = foundPaper
+    ? foundPaper
+    : papersDefinition
+        .map(def => ({name: def.name, definition: def[paperFace]}))
+        .find(def => def.name === paperType);
+  console.log('paper : ', paper);
+
+  let attributesByBox = [];
+
+  if (paper.definition.size?.width && paper.definition.size?.height) {
+    attributesByBox = findAttributesByBox(OCRResult, paper.definition, imgSize);
+  }
+  const attributesByRegex = findAttributesByRegex(OCRResult, paper.definition);
+
+  console.log('attributes by regex : ', attributesByRegex);
+  console.log('attributes by box : ', attributesByBox);
+
+  const foundAttributes = attributesByBox.concat(attributesByRegex);
+
+  // TODO: when an attribute is both found by box and regex, which one should be kept?
+  const processedAttributes = postProcessing(foundAttributes);
+  console.log('--------------PROCESSED ATTRIBUTES : ', processedAttributes);
+  return {attributes: processedAttributes, paperName: paper.name};
 };
