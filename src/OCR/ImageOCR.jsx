@@ -1,10 +1,11 @@
 import React, {useRef, useEffect, useState} from 'react';
-import {Dimensions} from 'react-native';
+import {Dimensions, View} from 'react-native';
 import RNFS from 'react-native-fs';
 import Canvas, {Image as CanvasImage} from 'react-native-canvas';
 import {findAttributes} from './findAttributes';
 import {normalizeImageSize} from './ImageResizer';
 import MlkitOcr from 'react-native-mlkit-ocr';
+import {AttributesResult} from './AttributesResult';
 
 const mimeMap = {
   jpeg: 'image/jpeg',
@@ -20,6 +21,8 @@ export const ImageOCR = ({
 }) => {
   const ref = useRef(null);
   const [imgBase64, setImgBase64] = useState(null);
+  const [foundAttributes, setFoundAttributes] = useState([]);
+  const [paperName, setPaperName] = useState([]);
 
   useEffect(() => {
     if (imgURI) {
@@ -44,13 +47,20 @@ export const ImageOCR = ({
           };
           //const normalizedImage = await normalizeImageSize(imgURI, 450, 285);
           let startTime = performance.now();
-          const result = await MlkitOcr.detectFromUri(imgURI);
+          const OCRResult = await MlkitOcr.detectFromUri(imgURI);
           let endTime = performance.now();
           console.log(`OCR took ${endTime - startTime} ms.`);
           console.log('find matchign attributes');
 
           startTime = performance.now();
-          findAttributes(result, 'residencePermit', 'back', imgSize);
+          const attrResult = findAttributes(
+            OCRResult,
+            'residencePermit',
+            'back',
+            imgSize,
+          );
+          setFoundAttributes(attrResult.attributes);
+          setPaperName(attrResult.paperName);
           endTime = performance.now();
           console.log(`Fiond attributes took ${endTime - startTime} ms.`);
         }
@@ -100,5 +110,10 @@ export const ImageOCR = ({
     return null;
   }
 
-  return <Canvas ref={ref} />;
+  return (
+    <View>
+      <Canvas ref={ref} />
+      <AttributesResult paperName={paperName} attributes={foundAttributes} />
+    </View>
+  );
 };
