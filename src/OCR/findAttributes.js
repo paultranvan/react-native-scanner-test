@@ -2,6 +2,8 @@ import {papersDefinition} from './papers';
 
 const DISTANCE_TOLERANCE = 40;
 
+const MAX_TEXT_SHIFT_TOLERANCE = 5; // in %
+
 const normalizeReferenceText = text => {
   // TODO: strip weird character & co ?
   return text
@@ -119,40 +121,78 @@ const findTextBounds = OCRResult => {
   return {left, top, right, bottom};
 };
 
+const isDocumentCropped = (paper, textShiftBounding, imgSize) => {
+  const shiftBoundingPercent = {
+    left: (textShiftBounding.left / imgSize.width) * 100,
+    top: (textShiftBounding.top / imgSize.height) * 100,
+  };
+  const shiftAttrBoundingPercent = {
+    left: (paper.textBounding.left / paper.size.width) * 100,
+    top: (paper.textBounding.top / paper.size.height) * 100,
+  };
+  console.log({shiftBoundingPercent});
+  console.log({shiftAttrBoundingPercent});
+
+  const leftDiff = Math.abs(
+    shiftBoundingPercent.left - shiftAttrBoundingPercent.left,
+  );
+  const topDiff = Math.abs(
+    shiftBoundingPercent.top - shiftAttrBoundingPercent.top,
+  );
+
+  // This threshold is purely arbitrary and opened to debate
+  if (
+    leftDiff < MAX_TEXT_SHIFT_TOLERANCE &&
+    topDiff < MAX_TEXT_SHIFT_TOLERANCE
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const findAttributesByBox = (OCRResult, paper, imgSize) => {
   const attributesToFind = paper.attributesBoxes
     ? paper.attributesBoxes.filter(att => !(att.enabled === false))
     : [];
 
-  // could be used for cases where the paper is not well centered
-  const shiftBounding = {top: 0, left: 0};
+  const textShiftBounding = {top: 0, left: 0};
   const textAreaSize = {...imgSize};
 
-  let handleNotCentered = paper.textBounding ? true : false;
-  if (handleNotCentered) {
+  const canHandleNotCentered = paper.textBounding ? true : false;
+  if (canHandleNotCentered) {
     const textBounds = findTextBounds(OCRResult);
     textAreaSize.width = textBounds.right - textBounds.left;
     textAreaSize.height = textBounds.bottom - textBounds.top;
-    shiftBounding.left = textBounds.left;
-    shiftBounding.top = textBounds.top;
+    textShiftBounding.left = textBounds.left;
+    textShiftBounding.top = textBounds.top;
   }
+  // We apply a different strategy depending on if the doc is correctly cropped or not
+  // If the doc is not properly cropped, we use the text bounds to normalize the coordinates
+  // However, it is not clear how useful it is, as the tests seem rather satisfying even when
+  // applying the text bounds strategy on cropped docs. Furthermore, establishing a "cropped threshold"
+  // is not an easy task and might result is false positive/negative...
+  // Nevertheless, our intuition is the cropped strategy will achieve better results, so we prefer to
+  // keep it like this to avoid potentially degrading the experience when the document is properly cropped.
+  // Must that might be challenged in the future.
+  const isCropped = isDocumentCropped(paper, textShiftBounding, imgSize);
+  console.log('is doc cropped: ', isCropped);
+  const handleNotCentered = canHandleNotCentered && !isCropped;
 
   const foundAttributes = [];
 
   for (const attr of attributesToFind) {
     console.log('------attr : ', attr);
-    const attrBouding = {left: 0, top: 0};
-    const notCentered = true; // TODO : détecter quand non centré ? nécessaire ? tester...
+    const normalizedAttrBouding = {left: 0, top: 0};
     if (handleNotCentered) {
-      attrBouding.left =
+      normalizedAttrBouding.left =
         attr.bounding.left /
         (paper.textBounding.right - paper.textBounding.left);
-      attrBouding.top =
+      normalizedAttrBouding.top =
         attr.bounding.top /
         (paper.textBounding.bottom - paper.textBounding.top);
     } else {
-      attrBouding.left = attr.bounding.left / paper.size.width;
-      attrBouding.top = attr.bounding.top / paper.size.height;
+      normalizedAttrBouding.left = attr.bounding.left / paper.size.width;
+      normalizedAttrBouding.top = attr.bounding.top / paper.size.height;
     }
 
     let minDistance = 100000;
@@ -165,8 +205,8 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
           const size = handleNotCentered ? textAreaSize : imgSize;
           distance = computeDistanceByBoxRatio(
             el.bounding,
-            attrBouding,
-            shiftBounding,
+            normalizedAttrBouding,
+            textShiftBounding,
             size,
           );
 
@@ -356,16 +396,18 @@ const findPaper = (OCRResult, papers) => {
   return null;
 };
 
+/**
+ * This can be called with a paperType + face, but for now, it is used as fallback
+ * when no paper is automatically found
+ */
 export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
-  // TODO should detect with levheinstein distance? Beware of false positive...
-  console.log('OCR result : ', OCRResult);
   console.log({imgSize});
 
   if (!OCRResult || OCRResult.length < 1) {
     return null;
   }
 
-  // try to auto find paper
+  // Try to auto find paper
   const foundPaper = findPaper(OCRResult, papersDefinition);
   console.log('Auto find paper : ', foundPaper);
   const paper = foundPaper
@@ -373,7 +415,6 @@ export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
     : papersDefinition
         .map(def => ({name: def.name, definition: def[paperFace]}))
         .find(def => def.name === paperType);
-  console.log('paper : ', paper);
 
   let attributesByBox = [];
 

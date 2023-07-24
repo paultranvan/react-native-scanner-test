@@ -378,7 +378,6 @@ export const papersDefinition = [
 ];
 
 export const checkCountryCode = code => {
-  console.log('country code : ', code);
   const foundCountry = COUNTRIES_ISO.find(
     country => country.code2 === code || country.code3 === code,
   );
