@@ -2,10 +2,6 @@ import React, {useRef, useEffect, useState} from 'react';
 import {Dimensions, View} from 'react-native';
 import RNFS from 'react-native-fs';
 import Canvas, {Image as CanvasImage} from 'react-native-canvas';
-import {findAttributes} from './findAttributes';
-import {normalizeImageSize} from './ImageResizer';
-import MlkitOcr from 'react-native-mlkit-ocr';
-import {AttributesResult} from './AttributesResult';
 
 const mimeMap = {
   jpeg: 'image/jpeg',
@@ -21,8 +17,6 @@ export const ImageOCR = ({
 }) => {
   const ref = useRef(null);
   const [imgBase64, setImgBase64] = useState(null);
-  const [foundAttributes, setFoundAttributes] = useState([]);
-  const [paperName, setPaperName] = useState([]);
 
   useEffect(() => {
     if (imgURI) {
@@ -35,41 +29,6 @@ export const ImageOCR = ({
       });
     }
   }, [imgURI]);
-
-  useEffect(() => {
-    const runOCR = async () => {
-      try {
-        if (imgURI && originalWidth && originalHeight) {
-          console.log('normalize img and OCR with imgURI : ', imgURI);
-          const imgSize = {
-            width: originalWidth,
-            height: originalHeight,
-          };
-          //const normalizedImage = await normalizeImageSize(imgURI, 450, 285);
-          let startTime = performance.now();
-          const OCRResult = await MlkitOcr.detectFromUri(imgURI);
-          let endTime = performance.now();
-          console.log(`OCR took ${endTime - startTime} ms.`);
-          console.log('find matchign attributes');
-
-          startTime = performance.now();
-          const attrResult = findAttributes(
-            OCRResult,
-            'residencePermit',
-            'back',
-            imgSize,
-          );
-          setFoundAttributes(attrResult.attributes);
-          setPaperName(attrResult.paperName);
-          endTime = performance.now();
-          console.log(`Fiond attributes took ${endTime - startTime} ms.`);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    runOCR();
-  }, [imgURI, originalWidth, originalHeight]);
 
   useEffect(() => {
     if (ref.current && imgURI && imgBase64 && OCRResult) {
@@ -113,7 +72,6 @@ export const ImageOCR = ({
   return (
     <View>
       <Canvas ref={ref} />
-      <AttributesResult paperName={paperName} attributes={foundAttributes} />
     </View>
   );
 };

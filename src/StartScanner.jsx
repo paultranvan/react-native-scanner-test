@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Button, SafeAreaView, StyleSheet, View} from 'react-native';
 import {Scanner} from './Scanner.jsx';
-import {OCR} from './OCR/OCR.jsx';
+import {ImageGalleryPicker} from './OCR/ImageGalleryPicker.jsx';
 
 export const StartScanner = () => {
   const [newScanner, setNewScanner] = useState(false);
@@ -12,8 +12,7 @@ export const StartScanner = () => {
   }
 
   if (startOCR) {
-    console.log('start OCR');
-    return <OCR uri={null} />;
+    return <ImageGalleryPicker />;
   }
 
   return (
@@ -31,7 +30,7 @@ export const StartScanner = () => {
           onPress={() => {
             setStartOCR(true);
           }}
-          title="Start OCR"
+          title="Start OCR from image gallery"
         />
       </View>
     </SafeAreaView>

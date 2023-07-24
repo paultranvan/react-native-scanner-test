@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, FlatList, StyleSheet} from 'react-native';
+import {findAttributes} from './findAttributes';
 
 const Item = ({name, value}) => (
   <View style={styles.row}>
@@ -11,19 +12,42 @@ const Item = ({name, value}) => (
 const Header = ({name}) => {
   return (
     <View style={styles.headerContainer}>
-      <Text style={styles.headerText}>{name}</Text>
+      <Text style={styles.headerText}>Paper found: {name}</Text>
     </View>
   );
 };
 
-export const AttributesResult = ({paperName, attributes}) => {
-  if (!attributes) {
+export const AttributesResultOCR = ({OCRResult, imgSize}) => {
+  const [foundAttributes, setFoundAttributes] = useState(null);
+  const [paperName, setPaperName] = useState(null);
+
+  useEffect(() => {
+    const runOCR = async () => {
+      console.log('find matching attributes');
+
+      const startTime = performance.now();
+      const attrResult = findAttributes(
+        OCRResult,
+        'residencePermit',
+        'back',
+        imgSize,
+      );
+      setFoundAttributes(attrResult.attributes);
+      setPaperName(attrResult.paperName);
+      const endTime = performance.now();
+
+      console.log(`Found attributes took ${endTime - startTime} ms.`);
+    };
+    runOCR();
+  }, [OCRResult, imgSize]);
+
+  if (!foundAttributes) {
     return null;
   }
   return (
     <View style={styles.container}>
       <FlatList
-        data={attributes}
+        data={foundAttributes}
         renderItem={({item}) => <Item name={item.name} value={item.value} />}
         ListHeaderComponent={<Header name={paperName} />}
       />
@@ -35,6 +59,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  titleView: {
+    borderTopColor: 'black',
+    borderTopidth: StyleSheet.hairlineWidth,
   },
   row: {
     flexDirection: 'row',

@@ -1,62 +1,27 @@
 import React, {useState, useEffect} from 'react';
 import MlkitOcr from 'react-native-mlkit-ocr';
-import {launchImageLibrary} from 'react-native-image-picker';
-import {
-  SafeAreaView,
-  View,
-  StyleSheet,
-  ScrollView,
-  NativeModules,
-} from 'react-native';
+import {SafeAreaView, View, StyleSheet, ScrollView} from 'react-native';
 import {ImageOCR} from './ImageOCR';
 import {TextOCR} from './TextOCR';
+import {AttributesResultOCR} from './AttributesResultOCR';
 
-export const OCR = ({uri}) => {
+export const OCR = ({uri, imgSize}) => {
   const [OCRResult, setOCRResult] = useState(null);
-  const [imgDimensions, setImgDimensions] = useState(null);
-  const [imgURI, setImgURI] = useState(uri);
 
   useEffect(() => {
     const processOCR = async () => {
       if (uri) {
+        console.log('process OCR from image');
+        let startTime = performance.now();
         const result = await MlkitOcr.detectFromUri(uri);
+        let endTime = performance.now();
+        console.log(`OCR took ${endTime - startTime} ms.`);
         setOCRResult(result);
       }
     };
 
     processOCR();
   }, [uri]);
-
-  const processImageResponse = async response => {
-    if (!response.assets || response.assets.length < 1) {
-      throw new Error('No image in response');
-    }
-    try {
-      const img = response.assets[0];
-      const result = await MlkitOcr.detectFromUri(img.uri);
-      console.log('img : ', img);
-      setImgURI(img.uri);
-      setOCRResult(result);
-      setImgDimensions({width: img.width, height: img.height});
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const getFromGallery = async () => {
-    return launchImageLibrary(
-      {
-        mediaType: 'photo',
-      },
-      async response => {
-        await processImageResponse(response);
-      },
-    );
-  };
-
-  if (!imgURI && !OCRResult) {
-    getFromGallery();
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,12 +32,13 @@ export const OCR = ({uri}) => {
         <View style={styles.imageView}>
           <ImageOCR
             OCRResult={OCRResult}
-            imgURI={imgURI}
-            originalWidth={imgDimensions?.width}
-            originalHeight={imgDimensions?.height}
+            imgURI={uri}
+            originalWidth={imgSize?.width}
+            originalHeight={imgSize?.height}
           />
         </View>
       </ScrollView>
+      <AttributesResultOCR OCRResult={OCRResult} imgSize={imgSize} />
     </SafeAreaView>
   );
 };
