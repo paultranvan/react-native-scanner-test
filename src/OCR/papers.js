@@ -359,7 +359,7 @@ export const papersDefinition = [
       attributesRegex: [
         {
           name: 'IBAN',
-          regex: /^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/,
+          regex: /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/,
         },
         {
           name: 'BIC',

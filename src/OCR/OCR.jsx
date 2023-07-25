@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   textView: {
     paddingBottom: 20,
     borderWidth: 1,
- },
+  },
   imageView: {
     //alignItems: 'center',
     //justifyContent: 'center',

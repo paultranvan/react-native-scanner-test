@@ -1,8 +1,7 @@
 import {papersDefinition} from './papers';
 
-const DISTANCE_TOLERANCE = 40;
-
-const MAX_TEXT_SHIFT_TOLERANCE = 5; // in %
+const MAX_TEXT_SHIFT_THRESHOLD = 5; // in %
+const MAX_LINE_SHIFT_THRESHOLD = 5; // in px
 
 const normalizeReferenceText = text => {
   // TODO: strip weird character & co ?
@@ -140,10 +139,10 @@ const isDocumentCropped = (paper, textShiftBounding, imgSize) => {
     shiftBoundingPercent.top - shiftAttrBoundingPercent.top,
   );
 
-  // This threshold is purely arbitrary and opened to debate
+  // This threshold is purely arbitrary and open to debate
   if (
-    leftDiff < MAX_TEXT_SHIFT_TOLERANCE &&
-    topDiff < MAX_TEXT_SHIFT_TOLERANCE
+    leftDiff < MAX_TEXT_SHIFT_THRESHOLD &&
+    topDiff < MAX_TEXT_SHIFT_THRESHOLD
   ) {
     return true;
   }
@@ -263,51 +262,102 @@ const checkValidationRules = (attribute, match) => {
   return isValid;
 };
 
-const findAttributeInText = (attribute, text) => {
-  const normalizedText = attribute.oneWord ? text : removeSpaces(text);
-  const result = normalizedText.match(attribute.regex);
+const findAttributeInText = (searchedAttribute, text) => {
+  const normalizedText = searchedAttribute.oneWord ? text : removeSpaces(text);
+  const result = normalizedText.match(searchedAttribute.regex);
   if (result?.length > 0) {
-    console.log('GOTCHA : ', result);
-    if (attribute.validationRules?.length > 0) {
-      if (!checkValidationRules(attribute, result)) {
-        console.log('does not repsect validation rule !');
+    console.log('----------GOTCHA : ', result);
+    if (searchedAttribute.validationRules?.length > 0) {
+      if (!checkValidationRules(searchedAttribute, result)) {
         return null;
       }
     }
     return {
-      name: attribute.name,
+      name: searchedAttribute.name,
       value: result[0],
-      postTextRules: attribute.postTextRules,
+      postTextRules: searchedAttribute.postTextRules,
     };
   }
   return null;
 };
 
-const findAttributeInBlocks = (OCRResult, attribute) => {
-  for (const block of OCRResult) {
-    const attr = findAttributeInText(attribute, block.text);
-    if (attr) {
-      return attr;
-    }
-  }
-};
+/**
+ * In some situations, the matching text will be incomplete, because of
+ * how the OCR will split the elements.
+ * For instance, the regex on IBAN is not a fixed length, as it can vary up to 34 chars.
+ * If the OCR splits the IBAN in several blocks, the left one might be considered as valid,
+ * even though some chars are missing.
+ * To cope with this, we add this step to try to find the most chars on the right, on the same
+ * line, i.e. with the same Y coordinate but with a greater X.
 
-const findAttributeInLines = (OCRResult, attribute) => {
+ */
+const findMatchingTextOnSameLine = (
+  OCRResult,
+  matchingBox,
+  matchText,
+  searchedAttribute,
+) => {
+  const top = matchingBox.bounding.top;
+  const right = matchingBox.bounding.left + matchingBox.bounding.width;
+  let finalMatchText = matchText;
+
+  let rightText = '';
   for (const block of OCRResult) {
     for (const line of block.lines) {
-      const attr = findAttributeInText(attribute, line.text);
+      for (const el of line.elements) {
+        if (
+          Math.abs(el.bounding.top - top) < MAX_LINE_SHIFT_THRESHOLD &&
+          el.bounding.left > right
+        ) {
+          // find other element on same line, on the right
+          rightText += el.text;
+          const mergedText = matchText + rightText;
+          if (findAttributeInText(searchedAttribute, mergedText)) {
+            finalMatchText = mergedText;
+          }
+        }
+      }
+    }
+  }
+
+  console.log('--------final text : ', finalMatchText);
+
+  return finalMatchText;
+};
+
+const findAttribute = (OCRResult, box, searchedAttribute) => {
+  const attr = findAttributeInText(searchedAttribute, box.text);
+  if (attr) {
+    // Extra step to find splitted text
+    const newMatchText = findMatchingTextOnSameLine(
+      OCRResult,
+      box,
+      attr.value,
+      searchedAttribute,
+    );
+    attr.value = newMatchText;
+    return attr;
+  }
+  return null;
+};
+
+const findAttributeInLines = (OCRResult, searchedAttribute) => {
+  for (const block of OCRResult) {
+    for (const line of block.lines) {
+      const attr = findAttribute(OCRResult, line, searchedAttribute);
       if (attr) {
         return attr;
       }
     }
   }
+  return null;
 };
 
-const findAttributeInElements = (OCRResult, attribute) => {
+const findAttributeInElements = (OCRResult, searchedAttribute) => {
   for (const block of OCRResult) {
     for (const line of block.lines) {
       for (const el of line.elements) {
-        const attr = findAttributeInText(attribute, el.text);
+        const attr = findAttribute(OCRResult, el, searchedAttribute);
         if (attr) {
           return attr;
         }
@@ -322,19 +372,22 @@ const findAttributesByRegex = (OCRResult, paper) => {
     : [];
   const foundAttributes = [];
   for (const attr of attributesToFind) {
-    // First, try to find by the coarse-grain blocks
-    const resultByBlock = findAttributeInBlocks(OCRResult, attr);
-    if (resultByBlock) {
-      foundAttributes.push(resultByBlock);
-      continue;
-    }
-    // If it failed, try to find by lines
+    /**
+     * Searching by line first rather than elements avoids to find false positive.
+     * Typically for BIC, the regex is not very discriminative and can match other elemnts.
+     * But the actual BIC is quite often a separated block in OCR, while false positive such
+     * as a name will be detected alongside other attributes on the same line.
+     * Note we do not search by block, at is this seems not necessary and adds complexity when
+     * trying to detect other text on the same Y coordinates.
+     */
+
+    // Try to find directly by the lines
     const resultByLines = findAttributeInLines(OCRResult, attr);
     if (resultByLines) {
       foundAttributes.push(resultByLines);
       continue;
     }
-    // Finally, try by elements
+    // If it failed, try to find by elements
     const resultByElements = findAttributeInElements(OCRResult, attr);
     if (resultByElements) {
       foundAttributes.push(resultByElements);
@@ -399,7 +452,7 @@ const findPaper = (OCRResult, papers) => {
 };
 
 /**
- * This can be called with a paperType + face, but for now, it is used as fallback
+ * The paperType + face are used as fallback
  * when no paper is automatically found
  */
 export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
@@ -418,7 +471,7 @@ export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
         .map(def => ({name: def.name, definition: def[paperFace]}))
         .find(def => def.name === paperType);
 
-  console.log('detect paper ', paper)
+  console.log('detect paper ', paper);
 
   let attributesByBox = [];
 
