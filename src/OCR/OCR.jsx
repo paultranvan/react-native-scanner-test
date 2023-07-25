@@ -26,10 +26,10 @@ export const OCR = ({uri, imgSize}) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        <View style={styles.textView}>
-          <TextOCR OCRResult={OCRResult} />
+        <View style={styles.attributesView}>
+          <AttributesResultOCR OCRResult={OCRResult} imgSize={imgSize} />
         </View>
-        <View style={styles.imageView}>
+        <View style={styles.textView}>
           <ImageOCR
             OCRResult={OCRResult}
             imgURI={uri}
@@ -37,8 +37,10 @@ export const OCR = ({uri, imgSize}) => {
             originalHeight={imgSize?.height}
           />
         </View>
+        <View style={styles.textView}>
+          <TextOCR OCRResult={OCRResult} />
+        </View>
       </ScrollView>
-      <AttributesResultOCR OCRResult={OCRResult} imgSize={imgSize} />
     </SafeAreaView>
   );
 };
@@ -49,15 +51,19 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     borderColor: '#ccc',
+    flex: 1,
   },
   textView: {
-    paddingLeft: 20,
     paddingBottom: 20,
-  },
+    borderWidth: 1,
+ },
   imageView: {
     //alignItems: 'center',
     //justifyContent: 'center',
     // backgroundColor: 'red',
-    height: '100%',
+    // height: '50%',
+  },
+  attributesView: {
+    borderWidth: 1,
   },
 });
