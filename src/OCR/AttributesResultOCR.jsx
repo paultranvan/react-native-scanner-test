@@ -2,9 +2,15 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {findAttributes} from './findAttributes';
 
-export const AttributesResultOCR = ({OCRResult, imgSize}) => {
+export const AttributesResultOCR = ({
+  OCRResult,
+  imgSize,
+  paperName,
+  paperFace,
+  autoDetect,
+}) => {
   const [foundAttributes, setFoundAttributes] = useState(null);
-  const [paperName, setPaperName] = useState(null);
+  const [paper, setPaper] = useState(null);
 
   useEffect(() => {
     const runOCR = async () => {
@@ -14,20 +20,24 @@ export const AttributesResultOCR = ({OCRResult, imgSize}) => {
         const startTime = performance.now();
         const attrResult = findAttributes(
           OCRResult,
-          'residencePermit',
-          'back',
+          paperName,
+          paperFace,
+          autoDetect,
           imgSize,
         );
         console.log({attrResult});
-        setFoundAttributes(attrResult.attributes);
-        setPaperName(attrResult.paperName);
+        if (attrResult) {
+          setFoundAttributes(attrResult.attributes);
+          setPaper(attrResult.paper);
+        }
+
         const endTime = performance.now();
 
         console.log(`Found attributes took ${endTime - startTime} ms.`);
       }
     };
     runOCR();
-  }, [OCRResult, imgSize]);
+  }, [OCRResult, imgSize, paperName, paperFace, autoDetect]);
 
   if (!foundAttributes) {
     return null;
@@ -36,7 +46,7 @@ export const AttributesResultOCR = ({OCRResult, imgSize}) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Paper found: {paperName}</Text>
+        <Text style={styles.headerText}>Paper found: {paper}</Text>
       </View>
       {foundAttributes.map((attr, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
@@ -66,8 +76,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: 'bold',
   },
-  value: {
-  },
+  value: {},
   headerContainer: {
     padding: 20,
     backgroundColor: '#f0f0f0',

@@ -1,12 +1,15 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import MlkitOcr from 'react-native-mlkit-ocr';
 import {SafeAreaView, View, StyleSheet, ScrollView} from 'react-native';
 import {ImageOCR} from './ImageOCR';
 import {TextOCR} from './TextOCR';
 import {AttributesResultOCR} from './AttributesResultOCR';
+import {SelectedPaperContext} from '../providers/SelectPaperProvider';
 
 export const OCR = ({uri, imgSize}) => {
   const [OCRResult, setOCRResult] = useState(null);
+  const {paperName, paperFace, autoDetect} = useContext(SelectedPaperContext);
+  console.log('paper name from context : ', paperName)
 
   useEffect(() => {
     const processOCR = async () => {
@@ -27,7 +30,13 @@ export const OCR = ({uri, imgSize}) => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.attributesView}>
-          <AttributesResultOCR OCRResult={OCRResult} imgSize={imgSize} />
+          <AttributesResultOCR
+            OCRResult={OCRResult}
+            imgSize={imgSize}
+            paperName={paperName}
+            paperFace={paperFace}
+            autoDetect={autoDetect}
+          />
         </View>
         <View style={styles.textView}>
           <ImageOCR

@@ -9,6 +9,7 @@ import React from 'react';
 import {SafeAreaView, useColorScheme} from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {SelectedPaperProvider} from './src/providers/SelectPaperProvider';
 import {StartScanner} from './src/StartScanner';
 
 function App(): JSX.Element {
@@ -21,7 +22,9 @@ function App(): JSX.Element {
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <StartScanner />
+      <SelectedPaperProvider>
+        <StartScanner />
+      </SelectedPaperProvider>
     </SafeAreaView>
   );
 }

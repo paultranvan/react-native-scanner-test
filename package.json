@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@bam.tech/react-native-image-resizer": "^3.0.5",
+    "@react-native-community/checkbox": "^0.5.16",
+    "@react-native-picker/picker": "^2.4.10",
     "react": "18.2.0",
     "react-native": "0.71.1",
     "react-native-canvas": "^0.1.38",

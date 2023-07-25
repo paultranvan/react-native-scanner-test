@@ -9,8 +9,8 @@ export const TextOCR = ({OCRResult}) => {
           <Text style={styles.headerText}>OCR raw result</Text>
         </View>
         {OCRResult?.map(block => {
-          return block.lines.map(line => {
-            return <Text>{line.text}</Text>;
+          return block.lines.map((line, idx) => {
+            return <Text key={idx}>{line.text}</Text>;
           });
         })}
       </View>

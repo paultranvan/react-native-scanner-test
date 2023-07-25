@@ -455,23 +455,34 @@ const findPaper = (OCRResult, papers) => {
  * The paperType + face are used as fallback
  * when no paper is automatically found
  */
-export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
+export const findAttributes = (
+  OCRResult,
+  paperName,
+  paperFace,
+  autoDetect,
+  imgSize,
+) => {
   console.log({imgSize});
+  console.log('paper name : ', paperName);
+  console.log('paper face : ', paperFace);
 
   if (!OCRResult || OCRResult.length < 1) {
     return null;
   }
 
-  // Try to auto find paper
-  const foundPaper = findPaper(OCRResult, papersDefinition);
-  console.log('Auto find paper : ', foundPaper);
-  const paper = foundPaper
-    ? foundPaper
-    : papersDefinition
-        .map(def => ({name: def.name, definition: def[paperFace]}))
-        .find(def => def.name === paperType);
+  let paper;
+  if (autoDetect) {
+    paper = findPaper(OCRResult, papersDefinition);
+  } else {
+    paper = papersDefinition
+      .map(def => ({name: def.name, definition: def[paperFace]}))
+      .find(def => def.name === paperName);
+  }
 
   console.log('detect paper ', paper);
+  if (!paper) {
+    return null;
+  }
 
   let attributesByBox = [];
 
