@@ -158,6 +158,7 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
   const textShiftBounding = {top: 0, left: 0};
   const textAreaSize = {...imgSize};
 
+  let handleNotCentered = false;
   const canHandleNotCentered = paper.textBounding ? true : false;
   if (canHandleNotCentered) {
     const textBounds = findTextBounds(OCRResult);
@@ -165,6 +166,10 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
     textAreaSize.height = textBounds.bottom - textBounds.top;
     textShiftBounding.left = textBounds.left;
     textShiftBounding.top = textBounds.top;
+
+    const isCropped = isDocumentCropped(paper, textShiftBounding, imgSize);
+    console.log('is doc cropped: ', isCropped);
+    handleNotCentered = !isCropped;
   }
   // We apply a different strategy depending on if the doc is correctly cropped or not
   // If the doc is not properly cropped, we use the text bounds to normalize the coordinates
@@ -174,9 +179,6 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
   // Nevertheless, our intuition is the cropped strategy will achieve better results, so we prefer to
   // keep it like this to avoid potentially degrading the experience when the document is properly cropped.
   // Must that might be challenged in the future.
-  const isCropped = isDocumentCropped(paper, textShiftBounding, imgSize);
-  console.log('is doc cropped: ', isCropped);
-  const handleNotCentered = canHandleNotCentered && !isCropped;
 
   const foundAttributes = [];
 
@@ -415,6 +417,8 @@ export const findAttributes = (OCRResult, paperType, paperFace, imgSize) => {
     : papersDefinition
         .map(def => ({name: def.name, definition: def[paperFace]}))
         .find(def => def.name === paperType);
+
+  console.log('detect paper ', paper)
 
   let attributesByBox = [];
 
