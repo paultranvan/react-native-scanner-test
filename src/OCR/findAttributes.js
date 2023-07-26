@@ -36,17 +36,38 @@ const computeDistanceByBoxRatio = (
   return computeEuclideanDistance(normalizedBox, templateBounding);
 };
 
-const postTextProcessingRules = (rules, str) => {
-  let newStr = str;
-  if (!rules) {
-    return str;
+const transformDate = (attribute, text) => {
+  const defaultDateFormat = 'ddMMyyyy';
+  const dateFormat = attribute.dateFormat || defaultDateFormat;
+  const dateLength = dateFormat.length;
+
+  const newText = text.replace(/[.,-/]/g, '');
+  const dateRegex = new RegExp(`\\d{${dateLength}}$`);
+  const match = newText.match(dateRegex);
+  if (!match) {
+    return '';
   }
-  for (const rule of rules) {
-    if (rule.regex) {
-      // Default is removing
-      newStr = newStr.replace(rule.regex, rule.replace || '');
+  const date = match[0];
+  const newDate =
+    date.slice(0, 2) + '-' + date.slice(2, 4) + '-' + date.slice(4);
+
+  return newDate;
+};
+
+const postTextProcessingRules = (attribute, str) => {
+  let newStr = str;
+  if (attribute.postTextRules) {
+    for (const rule of attribute.postTextRules) {
+      if (rule.regex) {
+        // Default is removing
+        newStr = newStr.replace(rule.regex, rule.replace || '');
+        console.log('new str : ', newStr);
+      }
     }
   }
+  newStr =
+    attribute.type === 'date' ? transformDate(attribute, newStr) : newStr;
+
   return newStr;
 };
 
@@ -54,7 +75,7 @@ const postProcessing = attributes => {
   const textProcessed = attributes.map(attr => {
     return {
       ...attr,
-      value: postTextProcessingRules(attr.postTextRules, attr.value),
+      value: postTextProcessingRules(attr, attr.value),
     };
   });
 
@@ -241,29 +262,52 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
     if (matchingEl) {
       console.log('value matched : ', matchingEl.text);
       console.log('dist matched : ', minDistance);
-      foundAttributes.push({
-        name: attr.name,
-        value: matchingEl.text,
-        distance: minDistance,
-        postTextRules: attr.postTextRules || [],
-        group: attr.group,
-      });
+
+      const isValid = checkValidationRules(attr, matchingEl.text);
+      if (isValid) {
+        foundAttributes.push({
+          ...attr,
+          value: matchingEl.text,
+          distance: minDistance,
+        });
+      }
     }
   }
 
   return foundAttributes;
 };
 
-const checkValidationRules = (attribute, match) => {
+const checkValidationRules = (attribute, text) => {
+  if (!attribute.validationRules) {
+    return true;
+  }
+  if (!text) {
+    return false;
+  }
   let isValid = true;
   for (const rule of attribute.validationRules) {
     if (!isValid) {
       return isValid;
     }
-    isValid = rule.validationFn(match[rule.regexGroupIdx]);
-    // if (rule.validationType === 'ISOCountry') {
-    //   isValid = checkCountryCode(match[rule.regexGroupIdx]);
-    // }
+    if (rule.regex) {
+      isValid = rule.regex.test(text);
+    }
+  }
+  return isValid;
+};
+
+const checkValidationRulesFn = (attribute, match) => {
+  if (!attribute.validationRules) {
+    return true;
+  }
+  let isValid = true;
+  for (const rule of attribute.validationRules) {
+    if (!isValid) {
+      return isValid;
+    }
+    if (rule.validationFn) {
+      isValid = rule.validationFn(match[rule.regexGroupIdx]);
+    }
   }
   return isValid;
 };
@@ -274,7 +318,7 @@ const findAttributeInText = (searchedAttribute, text) => {
   if (result?.length > 0) {
     console.log('----------GOTCHA : ', result);
     if (searchedAttribute.validationRules?.length > 0) {
-      if (!checkValidationRules(searchedAttribute, result)) {
+      if (!checkValidationRulesFn(searchedAttribute, result)) {
         return null;
       }
     }
@@ -469,8 +513,6 @@ export const findAttributes = (
   imgSize,
 ) => {
   console.log({imgSize});
-  console.log('paper name : ', paperName);
-  console.log('paper face : ', paperFace);
 
   if (!OCRResult || OCRResult.length < 1) {
     return null;
