@@ -211,21 +211,18 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
             size,
           );
 
-          // console.log('dist : ', distance);
-          //console.log('el : ', el);
-          //console.log('el text : ', el.text);
-          // console.log('normalized bounds : ', bounds);
           if (distance < minDistance) {
-            //console.log('found min dist for el ', el);
-            matchingEl = {...el};
+            console.log('found min dist for el ', el);
 
+            matchingEl = {...el};
             minDistance = distance;
-            const hasElementOnright =
-              line.elements.length > cptLineElements + 1;
-            if (attr.fullLine && hasElementOnright) {
-              // Some attributes might be unecessarely splitted, e.g. a name in 2 parts
-              const nextEl = line.elements[cptLineElements + 1];
-              matchingEl.text += nextEl.text;
+
+            if (attr.fullLine && line.elements.length > cptLineElements + 1) {
+              // Let's try to find more text on the right
+              for (let i = cptLineElements + 1; i < line.elements.length; i++) {
+                const nextEl = line.elements[i];
+                matchingEl.text += nextEl.text;
+              }
             }
           }
           cptLineElements++;
