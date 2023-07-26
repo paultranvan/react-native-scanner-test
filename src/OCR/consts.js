@@ -149,7 +149,12 @@ export const COUNTRIES_ISO = [
   {code2: 'IS', code3: 'ISL', name: 'Iceland', number: '352'},
   {code2: 'IN', code3: 'IND', name: 'India', number: '356'},
   {code2: 'ID', code3: 'IDN', name: 'Indonesia', number: '360'},
-  {code2: 'IR', code3: 'IRN', name: 'Iran (Islamic Republic of)', number: '364'},
+  {
+    code2: 'IR',
+    code3: 'IRN',
+    name: 'Iran (Islamic Republic of)',
+    number: '364',
+  },
   {code2: 'IQ', code3: 'IRQ', name: 'Iraq', number: '368'},
   {code2: 'IE', code3: 'IRL', name: 'Ireland', number: '372'},
   {code2: 'IM', code3: 'IMN', name: 'Isle of Man', number: '833'},
@@ -263,7 +268,12 @@ export const COUNTRIES_ISO = [
   },
   {code2: 'KN', code3: 'KNA', name: 'Saint Kitts and Nevis', number: '659'},
   {code2: 'LC', code3: 'LCA', name: 'Saint Lucia', number: '662'},
-  {code2: 'MF', code3: 'MAF', name: 'Saint Martin (French part)', number: '663'},
+  {
+    code2: 'MF',
+    code3: 'MAF',
+    name: 'Saint Martin (French part)',
+    number: '663',
+  },
   {code2: 'PM', code3: 'SPM', name: 'Saint Pierre and Miquelon', number: '666'},
   {
     code2: 'VC',
@@ -327,7 +337,12 @@ export const COUNTRIES_ISO = [
   {code2: 'TV', code3: 'TUV', name: 'Tuvalu', number: '798'},
   {code2: 'UG', code3: 'UGA', name: 'Uganda', number: '800'},
   {code2: 'UA', code3: 'UKR', name: 'Ukraine', number: '804'},
-  {code2: 'AE', code3: 'ARE', name: 'United Arab Emirates (the)', number: '784'},
+  {
+    code2: 'AE',
+    code3: 'ARE',
+    name: 'United Arab Emirates (the)',
+    number: '784',
+  },
   {
     code2: 'GB',
     code3: 'GBR',

@@ -172,7 +172,7 @@ const isDocumentCropped = (paper, textBounding, imgSize) => {
 
 const findAttributesByBox = (OCRResult, paper, imgSize) => {
   const attributesToFind = paper.attributesBoxes
-    ? paper.attributesBoxes.filter(att => !(att.enabled === false))
+    ? paper.attributesBoxes.filter(attr => !(attr.enabled === false))
     : [];
 
   const textShiftBounding = {top: 0, left: 0};
@@ -418,7 +418,7 @@ const findAttributeInElements = (OCRResult, searchedAttribute) => {
 
 const findAttributesByRegex = (OCRResult, paper) => {
   const attributesToFind = paper.attributesRegex
-    ? paper.attributesRegex.filter(att => !(att.mandatory === false))
+    ? paper.attributesRegex.filter(att => !(att.enabled === false))
     : [];
   const foundAttributes = [];
   for (const attr of attributesToFind) {

@@ -28,7 +28,7 @@ export const AttributesResultOCR = ({
         console.log({attrResult});
         if (attrResult) {
           setFoundAttributes(attrResult.attributes);
-          setPaper(attrResult.paper);
+          setPaper(attrResult.paperName);
         }
 
         const endTime = performance.now();
