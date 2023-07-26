@@ -312,33 +312,30 @@ export const papersDefinition = [
         width: 1529,
         height: 1077,
       },
+      textBounding: {
+        bottom: 1027,
+        left: 23,
+        right: 1457,
+        top: 4,
+      },
       referenceBox: {
-        bounding: {
-          height: 32,
-          left: 33,
-          top: 69,
-          width: 257,
-        },
         text: 'PASSEPORT',
       },
       attributesBoxes: [
         {
           type: 'string',
           name: 'passportNumber',
-          enabled: true,
-          fixedSize: true,
           bounding: {
             height: 28,
             left: 1071,
             top: 118,
             width: 163,
           },
+          validationRules: [{regex: /^\d{2}[A-Za-z]{2}\d{5}/}],
         },
         {
-          type: 'string',
+          type: 'date',
           name: 'expirationDate',
-          enabled: true,
-          fixedSize: true,
           fullLine: true,
           bounding: {
             height: 25,
