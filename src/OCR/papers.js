@@ -45,12 +45,6 @@ export const papersDefinition = [
         top: 4,
       },
       referenceBox: {
-        bounding: {
-          height: 46,
-          left: 334,
-          top: 28,
-          width: 526,
-        },
         text: 'PERMISDECONDUIRE',
       },
       attributesBoxes: [
@@ -67,6 +61,7 @@ export const papersDefinition = [
           postTextRules: [
             {regex: /^1./},
             {regex: /^[\^4n]/},
+            {regex: /^\d/g},
             {regex: /[Aa]$/},
             {regex: /^a|a$/g},
           ],
@@ -85,7 +80,7 @@ export const papersDefinition = [
         {
           type: 'date',
           name: 'issueDate',
-          dateFormat: 'DDMMYYYY',
+          dateFormat: 'ddMMyyyy',
           enabled: true,
           bounding: {
             height: 13,
@@ -93,21 +88,21 @@ export const papersDefinition = [
             top: 96,
             width: 57,
           },
-          postTextRules: [{regex: /\^4a/}, {regex: /\^./}, {regex: /[.,]/g}],
+          postTextRules: [{regex: /\^4a/}, {regex: /\^./}],
         },
         {
           type: 'date',
           name: 'expirationDate',
-          dateFormat: 'DDMMYYYY',
+          dateFormat: 'ddMMyyyy',
           enabled: true,
           fixedSize: true,
           bounding: {
             height: 16,
             left: 129,
-            top: 115,
+            top: 120,
             width: 71,
           },
-          postTextRules: [{regex: /^4b/}, {regex: /^\./}, {regex: /[.,]/g}],
+          postTextRules: [{regex: /^4b/}, {regex: /^\./}],
         },
         {
           type: 'string',
@@ -194,12 +189,6 @@ export const papersDefinition = [
         top: 16,
       },
       referenceBox: {
-        bounding: {
-          height: 39,
-          left: 41,
-          top: 103,
-          width: 284,
-        },
         text: 'CARTENATIONALE',
       },
       attributesRegex: [
@@ -239,8 +228,8 @@ export const papersDefinition = [
         width: 596,
         height: 410,
       },
-      textShift: {
-        bottom: 218,
+      textBounding: {
+        bottom: 304,
         left: 12,
         right: 429,
         top: 126,
@@ -248,14 +237,13 @@ export const papersDefinition = [
       attributesBoxes: [
         {
           type: 'date',
-          dateFormat: 'DDMMYYYY',
+          dateFormat: 'ddMMyyyy',
           name: 'expirationDate',
           bounding: {
-            left: 175,
-            top: 176,
+            left: 174,
+            top: 172,
           },
           fullLine: true,
-          postTextRules: [{regex: /[.,]/g}],
         },
       ],
     },
@@ -273,13 +261,12 @@ export const papersDefinition = [
       attributesBoxes: [
         {
           type: 'date',
-          dateFormat: 'DDMMYYYY',
+          dateFormat: 'ddMMyyyy',
           name: 'expirationDate',
           bounding: {
             left: 214,
             top: 171,
           },
-          postTextRules: [{regex: /[.,/]/g}],
         },
       ],
     },
