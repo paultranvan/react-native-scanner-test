@@ -120,10 +120,10 @@ const findTextBounds = OCRResult => {
   return {left, top, right, bottom};
 };
 
-const isDocumentCropped = (paper, textShiftBounding, imgSize) => {
+const isDocumentCropped = (paper, textBounding, imgSize) => {
   const shiftBoundingPercent = {
-    left: (textShiftBounding.left / imgSize.width) * 100,
-    top: (textShiftBounding.top / imgSize.height) * 100,
+    left: (textBounding.left / imgSize.width) * 100,
+    top: (textBounding.top / imgSize.height) * 100,
   };
   const shiftAttrBoundingPercent = {
     left: (paper.textBounding.left / paper.size.width) * 100,
@@ -161,15 +161,19 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
   const canHandleNotCentered = paper.textBounding ? true : false;
   if (canHandleNotCentered) {
     const textBounds = findTextBounds(OCRResult);
+    console.log('text bounds : ', textBounds);
     textAreaSize.width = textBounds.right - textBounds.left;
     textAreaSize.height = textBounds.bottom - textBounds.top;
-    textShiftBounding.left = textBounds.left;
-    textShiftBounding.top = textBounds.top;
 
-    const isCropped = isDocumentCropped(paper, textShiftBounding, imgSize);
+    const isCropped = isDocumentCropped(paper, textBounds, imgSize);
     console.log('is doc cropped: ', isCropped);
     handleNotCentered = !isCropped;
+    if (handleNotCentered) {
+      textShiftBounding.left = textBounds.left;
+      textShiftBounding.top = textBounds.top;
+    }
   }
+
   // We apply a different strategy depending on if the doc is correctly cropped or not
   // If the doc is not properly cropped, we use the text bounds to normalize the coordinates
   // However, it is not clear how useful it is, as the tests seem rather satisfying even when
@@ -186,10 +190,10 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
     const normalizedAttrBouding = {left: 0, top: 0};
     if (handleNotCentered) {
       normalizedAttrBouding.left =
-        attr.bounding.left /
+        (attr.bounding.left - paper.textBounding.left) /
         (paper.textBounding.right - paper.textBounding.left);
       normalizedAttrBouding.top =
-        attr.bounding.top /
+        (attr.bounding.top - paper.textBounding.top) /
         (paper.textBounding.bottom - paper.textBounding.top);
     } else {
       normalizedAttrBouding.left = attr.bounding.left / paper.size.width;
@@ -198,21 +202,26 @@ const findAttributesByBox = (OCRResult, paper, imgSize) => {
 
     let minDistance = 100000;
     let matchingEl;
+    const size = handleNotCentered ? textAreaSize : imgSize;
+    console.log('size : ', size);
+
     for (const block of OCRResult) {
       for (const line of block.lines) {
         let cptLineElements = 0;
         for (const el of line.elements) {
           let distance;
-          const size = handleNotCentered ? textAreaSize : imgSize;
           distance = computeDistanceByBoxRatio(
             el.bounding,
             normalizedAttrBouding,
             textShiftBounding,
             size,
           );
+          // console.log('dist', distance);
+          // console.log('el', el);
 
           if (distance < minDistance) {
-            console.log('found min dist for el ', el);
+            console.log(' min dist : ', distance);
+            //console.log('found min dist for el ', el);
 
             matchingEl = {...el};
             minDistance = distance;
