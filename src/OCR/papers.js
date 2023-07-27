@@ -75,7 +75,11 @@ export const papersDefinition = [
             left: 130,
             top: 52,
           },
-          postTextRules: [{regex: /^[\^4n]/}],
+          postTextRules: [
+            {regex: /^[\^4n]/},
+            {regex: /^\d/g},
+            {regex: /^a|a$/g},
+          ],
         },
         {
           type: 'date',
@@ -124,7 +128,7 @@ export const papersDefinition = [
         width: 401,
         height: 253,
       },
-      textShift: {bottom: 217, left: 3, right: 370, top: 6},
+      textBounding: {bottom: 217, left: 3, right: 370, top: 6},
       attributesBoxes: [
         {
           type: 'string',
@@ -194,7 +198,7 @@ export const papersDefinition = [
       attributesRegex: [
         {
           name: 'cardNumber',
-          regex: /^[0-9]{12}/,
+          regex: /^(\d{12}|[A-Z0-9]{12}|[A-Z0-9]{9})/,
         },
       ],
       attributesBoxes: [
@@ -214,6 +218,7 @@ export const papersDefinition = [
           type: 'string',
           name: 'lastName',
           enabled: true,
+          fullLine: true,
           bounding: {
             height: 42,
             left: 519,
@@ -255,6 +260,12 @@ export const papersDefinition = [
         width: 614,
         height: 390,
       },
+      textBounding: {
+        bottom: 337,
+        left: 207,
+        right: 577,
+        top: 27,
+      },
       referenceBox: {
         text: 'TITREDESEJOUR',
       },
@@ -265,7 +276,7 @@ export const papersDefinition = [
           name: 'expirationDate',
           bounding: {
             left: 214,
-            top: 171,
+            top: 133,
           },
         },
       ],
@@ -296,14 +307,14 @@ export const papersDefinition = [
     name: 'passport',
     front: {
       size: {
-        width: 1529,
-        height: 1077,
+        width: 1607,
+        height: 1149,
       },
       textBounding: {
-        bottom: 1027,
-        left: 23,
-        right: 1457,
-        top: 4,
+        bottom: 1045,
+        left: 54,
+        right: 1511,
+        top: 18,
       },
       referenceBox: {
         text: 'PASSEPORT',
@@ -313,10 +324,8 @@ export const papersDefinition = [
           type: 'string',
           name: 'passportNumber',
           bounding: {
-            height: 28,
-            left: 1071,
-            top: 118,
-            width: 163,
+            left: 1122,
+            top: 129,
           },
           validationRules: [{regex: /^\d{2}[A-Za-z]{2}\d{5}/}],
         },
@@ -325,9 +334,8 @@ export const papersDefinition = [
           name: 'expirationDate',
           fullLine: true,
           bounding: {
-            height: 25,
-            left: 466,
-            top: 736,
+            left: 506,
+            top: 771,
           },
         },
       ],
