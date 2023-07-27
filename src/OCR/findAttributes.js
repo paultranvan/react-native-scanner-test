@@ -61,7 +61,6 @@ const postTextProcessingRules = (attribute, str) => {
       if (rule.regex) {
         // Default is removing
         newStr = newStr.replace(rule.regex, rule.replace || '');
-        console.log('new str : ', newStr);
       }
     }
   }

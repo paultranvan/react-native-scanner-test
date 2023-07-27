@@ -10,7 +10,7 @@ import {SafeAreaView, useColorScheme} from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {SelectedPaperProvider} from './src/providers/SelectPaperProvider';
-import {StartScanner} from './src/StartScanner';
+import StartScanner from './src/StartScanner';
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';

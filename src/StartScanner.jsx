@@ -4,7 +4,7 @@ import {Scanner} from './Scanner.jsx';
 import {ImageGalleryPicker} from './OCR/ImageGalleryPicker.jsx';
 import {PaperSelection} from './OCR/PaperSelection.jsx';
 
-export const StartScanner = () => {
+const StartScanner = () => {
   const [newScanner, setNewScanner] = useState(false);
   const [startOCR, setStartOCR] = useState(false);
 
@@ -51,3 +51,5 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 });
+
+export default React.memo(StartScanner);
